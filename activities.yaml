@@ -1,0 +1,12 @@
+﻿browser:
+  - opera
+  - firefox
+office:
+  - LibreOffice
+  - onlyoffice
+  - word
+  - powerpoint
+data_ingestion:
+  - spark
+data_storage:
+  - hadoop

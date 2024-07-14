@@ -1,0 +1,91 @@
+/* Overall background of the page */
+body {
+    background-color: #d0e6d0; /* A darker green background */
+    color: #333333; /* Dark grey text for readability */
+    font-family: 'Arial', sans-serif; /* Modern, readable font */
+}
+
+/* Header styles */
+.header {
+    text-align: center;
+    padding: 20px 0;
+}
+
+/* Style for main headings */
+h1 {
+    color: #006400; /* Dark green color */
+}
+
+/* Tab styling */
+.dcc_tabs {
+    background-color: #cde4cd; /* Darker green background for tabs */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Adds subtle shadow for depth */
+}
+
+.dcc_tab {
+    border: none; /* Remove borders from individual tabs for a cleaner look */
+    padding: 12px 24px; /* Larger padding for a better touch area */
+    margin-right: 5px; /* Keeps space between tabs */
+    background-color: #b2d8b2; /* Light green background for tabs */
+    color: #333333; /* Dark text for contrast */
+    transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effect */
+}
+
+.dcc_tab:hover {
+    background-color: #99c199; /* Slightly darker green on hover for interaction feedback */
+    color: #ffffff; /* White text on hover */
+}
+
+.dcc_tab.dcc_tab--selected {
+    background-color: #81c784; /* A vibrant green for the active tab */
+    color: #ffffff; /* White text for readability */
+    font-weight: bold; /* Makes the active tab's label bold */
+}
+
+/* Button styling */
+.button {
+    background-color: #81c784; /* Green button background */
+    color: white; /* White text for buttons */
+    border: none; /* No borders for a modern look */
+    padding: 10px 20px; /* Ample padding for easy interaction */
+    border-radius: 5px; /* Rounded corners for a friendly touch */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
+.button:hover {
+    background-color: #6ba96b; /* Darker green on hover */
+    cursor: pointer; /* Changes cursor to pointer to indicate clickable */
+}
+
+/* Image adjustments */
+img {
+    border-radius: 5px; /* Rounded corners for images */
+}
+
+/* Flex container for image and title */
+.flex-container {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    padding: 10px 0;
+}
+
+.flex-item {
+    flex-grow: 1;
+    margin-left: 80px; /* Specific margin to align items properly */
+}
+
+/* POPOVERS */
+
+.custom-popover-header {
+    background-color: #81c784; /* A vibrant green, used in the active tab for consistency */
+    color: #ffffff; /* White text for contrast and readability */
+    border-bottom: 1px solid #70a670; /* Slightly darker green border for a subtle separation */
+}
+
+.custom-popover-body {
+    background-color: #99c199; /* Slightly darker green, similar to the tab hover, for body background */
+    color: #333333; /* Dark grey text, used in the main body for consistency */
+    padding: 10px; /* Adds some padding for content spacing */
+}
+

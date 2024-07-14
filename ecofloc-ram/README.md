@@ -42,7 +42,7 @@ To run the `ecofloc-ram` program, you need to execute it as root with the follow
   
   Example Command:
 
-  `# sudo ./ecofloc-ram.out -p [PID or App Name] -i [interval in seconds] -t [total time in seconds] --d --f [file.csv]`
+  `# sudo ./ecofloc-ram.out -p [PID or App Name] -i [interval in seconds] -t [total time in seconds] --d --f`
 
 
 ## Important Considerations

@@ -29,7 +29,7 @@ To run the `ecofloc-sd` program, you need to execute it as root with the followi
 
   Example Command:
 
-  `# sudo ./ecofloc-sd.out -p [PID or App Name] -i [interval in seconds] -t [total time in seconds] --d --f [file.csv]`
+  `# sudo ./ecofloc-sd.out -p [PID or App Name] -i [interval in seconds] -t [total time in seconds] --d --f`
 
 
 ## Important Considerations

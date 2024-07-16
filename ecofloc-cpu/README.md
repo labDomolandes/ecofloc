@@ -36,7 +36,7 @@ To run the `ecofloc-cpu` program, you need to execute it as root with the follow
   
   Example Command as root:
 
-  `# ./ecofloc-cpu.out -p [PID or App Name] -i [interval in seconds] -t [total time in seconds] --d --f`
+  `# ./ecofloc-cpu.out -p [PID or App Name] -i [interval in milliseconds] -t [total time in seconds] --d --f`
 
 ## Important Considerations
 

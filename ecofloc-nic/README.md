@@ -40,7 +40,7 @@ To run the `ecofloc-nic` program, you need to execute it as root with the follow
 
   Example Command:
 
-  `# sudo ./ecofloc-nic.out -p [PID or App Name] -i [interval in seconds] -t [total time in seconds] --d --f`
+  `# sudo ./ecofloc-nic.out -p [PID or App Name] -i [interval in milliseconds] -t [total time in seconds] --d --f`
 
 
 ## Important Considerations

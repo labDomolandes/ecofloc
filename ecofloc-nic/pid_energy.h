@@ -37,6 +37,12 @@ void handle_sigint(int sig);
 
 extern nic_features features;
 
+/*
+ * We use nethogs to obtain network statistics for a specific PID. 
+ * In /proc/<pid>/net, files represent the global network data from
+ * the perspective of the PID, considering its network namespace. 
+ */
+
 double pid_energy(int pid, int interval_ms, int timeout_s);
 
 

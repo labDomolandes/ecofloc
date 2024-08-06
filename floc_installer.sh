@@ -11,6 +11,7 @@ total_hw_success=5
 print_intro()
 {
     local color_yellow="\033[33m"
+    local color_red='\033[0;31m'
     local color_green='\033[0;32m'
     local color_reset="\033[0m"  # Reset to default color
 
@@ -26,7 +27,7 @@ print_intro()
 
 
     printf "\n"
-    echo "Starting FLOC installer..."
+    echo -e "${color_red}Starting FLOC installer...PLEASE, DO NOT CNTRL+C${color_reset}"
     printf "\n"
     printf "\n"
 }

@@ -16,7 +16,7 @@ create_gui_folder:
 cpu:
 	$(MAKE) -C ecofloc-cpu
 install_cpu:
-	cp ecofloc-cpu/ecofloc-cpu.out ecofloc-cpu/cpu_settings.conf $(FLOC_DIR)
+	cp ecofloc-cpu/ecofloc-cpu.out ecofloc-cpu/cpu_settings.conf ecofloc-cpu/cpu_features.conf $(FLOC_DIR)
 clean_cpu:
 	$(MAKE) -C ecofloc-cpu clean
 

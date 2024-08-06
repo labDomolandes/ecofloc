@@ -72,11 +72,13 @@ int main(int argc, char **argv)
 
     if (pid != 0)
     {
+        init_cpu_features(&features); //Declared as extern in pid_energy.h
         initialize_results_object(&pid, 1);  //defined in results_map.h
         pid_energy(pid, (int)interval_ms, (int)total_time_s);
     }
     else if (processName != NULL)
     {
+        init_cpu_features(&features); //Declared as extern in pid_energy.h
         initialize_results_object(processName, 0);  //defined in results_map.h
         comm_energy(processName, (int)interval_ms, (int)total_time_s);
     }

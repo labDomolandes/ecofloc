@@ -10,17 +10,28 @@ total_hw_success=5
 
 print_intro()
 {
-    # Main script execution
+    local color_yellow="\033[33m"
+    local color_green='\033[0;32m'
+    local color_reset="\033[0m"  # Reset to default color
+
     printf "\n"
     printf "\n"
-    echo "********************************************************************"
-    echo "*************FLOC: Energy Measuring System Tool for Linux***********"
-    echo "********************************************************************"
+
+    echo -e "${color_green}*****************************************************************"
+    echo -e "****ECOFLOC v1.0: Energy Measuring System Tool for Linux*********"
+    echo -e "*****************************************************************${color_reset}"
+
+    echo -e "${color_yellow}PLEASE, EDIT THE <COMPONENT_FEATURES> FILE IN EACH COMPONENT'S${color_reset}"
+    echo -e "${color_yellow}ROOT FOLDER, CONSIDERING YOUR HOST CONFIGURATION.${color_reset}"
+
+
     printf "\n"
     echo "Starting FLOC installer..."
     printf "\n"
     printf "\n"
 }
+
+
 
 print_success() 
 {
@@ -109,29 +120,29 @@ check_cpu()
     local buf
 
     # Check if /proc/cpuinfo exists
-    if [ ! -f "$cpu_info_file" ]; then
-        print_status "CPU -> Checking CPU info file. Possible reasons: You are in a virtual env. or the Kernel must be upgraded" 0
-        return 1
-    else
-        print_status "CPU -> Checking CPU info file" 1
-    fi
-    #If the freq. number is present in the file
-    while IFS= read -r buf; do
-        # Look for the line starting with "model name"
-        if [[ "$buf" == model\ name* ]]; then
-            local frequency_str
-            frequency_str=$(echo "$buf" | awk -F '@' '{print $2}')
-            if [ -n "$frequency_str" ]; then
-                 # If a number is present before GHz"
-                 print_status "CPU -> Checking if cpu base freq. is reachable" 1
-                 break
+    # if [ ! -f "$cpu_info_file" ]; then
+    #     print_status "CPU -> Checking CPU info file. Possible reasons: You are in a virtual env. or the Kernel must be upgraded" 0
+    #     return 1
+    # else
+    #     print_status "CPU -> Checking CPU info file" 1
+    # fi
+    # #If the freq. number is present in the file
+    # while IFS= read -r buf; do
+    #     # Look for the line starting with "model name"
+    #     if [[ "$buf" == model\ name* ]]; then
+    #         local frequency_str
+    #         frequency_str=$(echo "$buf" | awk -F '@' '{print $2}')
+    #         if [ -n "$frequency_str" ]; then
+    #              # If a number is present before GHz"
+    #              print_status "CPU -> Checking if cpu base freq. is reachable" 1
+    #              break
                 
-            else
-                print_status "CPU -> Checking if cpu base freq. is reachable. Possible reasons: You are in a virtual env. or the Kernel must be upgraded" 0
-                return 1
-            fi
-        fi
-    done < "$cpu_info_file"
+    #         else
+    #             print_status "CPU -> Checking if cpu base freq. is reachable. Possible reasons: You are in a virtual env. or the Kernel must be upgraded" 0
+    #             return 1
+    #         fi
+    #     fi
+    # done < "$cpu_info_file"
 
     ######
     # CURR. FREQ. of CORE 0. -> If the file exists and if it changes over the time
@@ -405,7 +416,6 @@ main() {
     if [ "$result_cpu" -eq 0 ]; then 
         ((number_hw_success++))
         make create_ecofloc_folder > /dev/null 
-        make uninstall_cpu > /dev/null
         make clean_cpu > /dev/null
 
         make cpu > /dev/null
@@ -431,7 +441,6 @@ main() {
     if [ "$result_ram" -eq 0 ]; then 
         ((number_hw_success++))
         make create_ecofloc_folder > /dev/null 
-        make uninstall_ram > /dev/null
         make clean_ram > /dev/null
 
         make ram > /dev/null
@@ -457,7 +466,6 @@ main() {
     if [ "$result_nic" -eq 0 ]; then 
         ((number_hw_success++))
         make create_ecofloc_folder > /dev/null 
-        make uninstall_nic > /dev/null
         make clean_nic > /dev/null
 
         make nic > /dev/null
@@ -483,7 +491,6 @@ main() {
     if [ "$result_gpu" -eq 0 ]; then 
         ((number_hw_success++))
         make create_ecofloc_folder > /dev/null 
-        make uninstall_gpu > /dev/null
         make clean_gpu > /dev/null
 
         make gpu > /dev/null
@@ -510,7 +517,6 @@ main() {
     if [ "$result_sd" -eq 0 ]; then 
         ((number_hw_success++))
         make create_ecofloc_folder > /dev/null 
-        make uninstall_sd > /dev/null
         make clean_sd > /dev/null
 
         make sd > /dev/null

@@ -35,6 +35,9 @@ extern volatile sig_atomic_t keep_running;
 void handle_sigint(int sig);
 
 
+/*
+* From nic.h
+*/
 extern nic_features features;
 
 /*

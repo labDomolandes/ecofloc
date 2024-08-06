@@ -37,10 +37,13 @@
 #include <limits.h>
 
 #include "cpu_map.h"
+#include "cpu.h"
 
 
-
-
+/*
+* From cpu.h
+*/
+extern cpu_features features;
 
 /*
  * Description: The function computes the CPU capacitance using the equation: 

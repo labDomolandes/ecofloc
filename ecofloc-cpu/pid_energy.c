@@ -31,49 +31,72 @@
 #include "pid_energy.h"
 #include "results_map.h"
 
+
+cpu_features features;
+
+
 static pthread_mutex_t fn_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+/*
+* Base freq. source files are not standard  
+*/
+
+// double get_capacitance() 
+// {
+//     char buf[1024];
+//     double cpu_freq_tdp; // In MHz
+//     double cpu_tdp = 28.0; //FROM DATASHEET
+//     double cpu_voltage_tdp = 1.5; //FROM DATASHEET
+//     double cpu_capacitance;
+    
+//     FILE* cpuinfo_file = fopen("/proc/cpuinfo", "r");
+//     if (cpuinfo_file == NULL) 
+//     {
+//         perror("Error opening /proc/cpuinfo");
+//         return -1.0;
+//     }
+
+//     while (fgets(buf, sizeof(buf), cpuinfo_file) != NULL) 
+//     {
+//         if (strncmp(buf, "model name", 10) == 0) 
+//         { 
+//             //go to line: model name @ value GHz
+//             char* frequency_str = strstr(buf, "@"); 
+//             if (frequency_str != NULL) 
+//             {
+//                 frequency_str++;
+//                 cpu_freq_tdp = strtod(frequency_str, NULL) * 1000; // Convert GHz to MHz
+//                 break;
+//             }
+//         }
+//     }
+//     fclose(cpuinfo_file);
+//     if (cpu_freq_tdp <= 0) 
+//     {
+//         fprintf(stderr, "Failed to parse CPU frequency from /proc/cpuinfo\n");
+//         return -1.0;
+//     }
+
+//     cpu_capacitance = (0.7 * cpu_tdp) / (cpu_freq_tdp * cpu_voltage_tdp * cpu_voltage_tdp);
+//     //printf("CAPACITANCE %f\n", cpu_capacitance);
+
+//     return cpu_capacitance;
+// }
+
+
+
+
 
 double get_capacitance() 
 {
-    char buf[1024];
-    double cpu_freq_tdp; // In MHz
-    double cpu_tdp = 28.0; //FROM DATASHEET
-    double cpu_voltage_tdp = 1.5; //FROM DATASHEET
-    double cpu_capacitance;
-    
-    FILE* cpuinfo_file = fopen("/proc/cpuinfo", "r");
-    if (cpuinfo_file == NULL) 
-    {
-        perror("Error opening /proc/cpuinfo");
-        return -1.0;
-    }
+    double cpu_capacitance = (0.7 * features.cpu_tdp) / 
+                             (features.cpu_freq_tdp * 
+                              features.cpu_voltage_tdp * 
+                              features.cpu_voltage_tdp);
 
-    while (fgets(buf, sizeof(buf), cpuinfo_file) != NULL) 
-    {
-        if (strncmp(buf, "model name", 10) == 0) 
-        { 
-            //go to line: model name @ value GHz
-            char* frequency_str = strstr(buf, "@"); 
-            if (frequency_str != NULL) 
-            {
-                frequency_str++;
-                cpu_freq_tdp = strtod(frequency_str, NULL) * 1000; // Convert GHz to MHz
-                break;
-            }
-        }
-    }
-    fclose(cpuinfo_file);
-    if (cpu_freq_tdp <= 0) 
-    {
-        fprintf(stderr, "Failed to parse CPU frequency from /proc/cpuinfo\n");
-        return -1.0;
-    }
-
-    cpu_capacitance = (0.7 * cpu_tdp) / (cpu_freq_tdp * cpu_voltage_tdp * cpu_voltage_tdp);
-    //printf("CAPACITANCE %f\n", cpu_capacitance);
-
-    return cpu_capacitance;
+    return cpu_capacitance; 
 }
+
 
 
 

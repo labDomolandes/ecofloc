@@ -33,27 +33,46 @@ void init_maps(cpu_map *map)
         exit(EXIT_FAILURE);
     }
 
-    // Count vcores
     map->TOTAL_VCORES = 0;
+    map->MAX_CORE_ID = -1;
+
     char line[256];
     while (fgets(line, sizeof(line), cpuinfo)) 
     {
+        //Total VCORES
         if (strncmp(line, "processor", 9) == 0) 
         {
             map->TOTAL_VCORES++;
         }
+        //Max CORE ID
+        int core_id;
+        if (sscanf(line, "core id : %d", &core_id) == 1) 
+        {
+            if (core_id > map->MAX_CORE_ID) 
+            {
+                map->MAX_CORE_ID = core_id;
+            }
+        }
+        
     }
     fclose(cpuinfo);
 
+    // Determine the size to allocate based on the larger value
+    int allocation_size = (map->TOTAL_VCORES > map->MAX_CORE_ID + 1) ? map->TOTAL_VCORES : (map->MAX_CORE_ID + 1);
+
     // Allocate memory for each resource
-    map->REAL_CORES = malloc(map->TOTAL_VCORES * sizeof(int));
-    map->VCORE_FREQ = malloc(map->TOTAL_VCORES * sizeof(float));
-    map->VCORE_VOLT = malloc(map->TOTAL_VCORES * sizeof(float));
-    map->PID_VCORES = malloc(map->TOTAL_VCORES * sizeof(int));
+    map->REAL_CORES = malloc(allocation_size * sizeof(int));
+    map->VCORE_FREQ = malloc(allocation_size * sizeof(float));
+    map->VCORE_VOLT = malloc(allocation_size * sizeof(float));
+    map->PID_VCORES = malloc(allocation_size * sizeof(int));
 
     if (!map->REAL_CORES || !map->VCORE_FREQ || !map->VCORE_VOLT || !map->PID_VCORES) 
     {
         perror("Memory allocation failed");
+        free(map->REAL_CORES);
+        free(map->VCORE_FREQ);
+        free(map->VCORE_VOLT);
+        free(map->PID_VCORES);
         exit(EXIT_FAILURE);
     }
 }

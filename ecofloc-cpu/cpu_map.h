@@ -37,12 +37,19 @@
 
 typedef struct 
 {
-//Avoid "extern" because of the threads in by_name measuring. Its thead needs its own struct instance...
+// Avoid "extern" because of the threads in by_name measuring. Its thead needs its own struct instance...
     int *REAL_CORES;
     float *VCORE_FREQ;   // Example: VCORE_FREQ[5] = 2.8 -> frequency of vcore 5 is 2.8
     float *VCORE_VOLT;
     int *PID_VCORES;
     int TOTAL_VCORES;
+
+    /*
+    * In processors like Intel U-series, the "core id" in /proc/cpuinfo may not match processor IDs.
+    * This variable prevents segmentation faults when creating arrays (see pid_energy.c).
+    */
+   
+    int MAX_CORE_ID;  
 } cpu_map;
 
 

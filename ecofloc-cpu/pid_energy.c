@@ -106,16 +106,18 @@ double current_power(cpu_map *map)
 
     float total_power = 0.0;
     float capacitance= get_capacitance(); //TODO:  Make capacitance global to calculate it only once
-     
+    int allocation_size = (map->TOTAL_VCORES > map->MAX_CORE_ID + 1) ? map->TOTAL_VCORES : (map->MAX_CORE_ID + 1);
+    printf("SIZE: %d\n", allocation_size);
+
     // map to cumulate the power of each real core
-    float *real_core_power = calloc(map->TOTAL_VCORES, sizeof(float));
+    float *real_core_power = calloc(allocation_size, sizeof(float));
     // number of vCores sharing each real core. For all cases I know, that is 2 (hyperthreading),
     // but...one never knows :)
-    int *real_core_count = calloc(map->TOTAL_VCORES, sizeof(int));
+    int *real_core_count = calloc(allocation_size, sizeof(int));
 
     for (int i = 0; i < map->TOTAL_VCORES; i++)
     {
-        if (map->PID_VCORES[i] == 1)
+        if (map->PID_VCORES[i] == 1) //if vCORE is used
         {
             int real_core = map->REAL_CORES[i];
             float power = capacitance * map->VCORE_VOLT[i] * map->VCORE_VOLT[i] * map->VCORE_FREQ[i];

@@ -106,8 +106,9 @@ double current_power(cpu_map *map)
 
     float total_power = 0.0;
     float capacitance= get_capacitance(); //TODO:  Make capacitance global to calculate it only once
+    
+    // To avoid segmentation faults due to processor and core id mismatching in cpuinfo file.
     int allocation_size = (map->TOTAL_VCORES > map->MAX_CORE_ID + 1) ? map->TOTAL_VCORES : (map->MAX_CORE_ID + 1);
-    printf("SIZE: %d\n", allocation_size);
 
     // map to cumulate the power of each real core
     float *real_core_power = calloc(allocation_size, sizeof(float));

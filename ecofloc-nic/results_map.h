@@ -31,8 +31,11 @@
 #include <time.h>
 
 #define CONFIG_PATH "/opt/ecofloc/nic_settings.conf"
-#define PID_OBJ_NAME "/ecofloc_nic"
+
+
 #define SHARED_OBJ_SIZE 4096 // 4KB
+#define SHARED_OBJ_NAME_ROOT "/ECOFLOC_NIC_" 
+extern char* SHARED_OBJ_NAME;
 
 
 /*

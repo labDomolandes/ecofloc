@@ -31,8 +31,10 @@
 #include <time.h>
 
 #define CONFIG_PATH "/opt/ecofloc/gpu_settings.conf"
-#define PID_OBJ_NAME "/ecofloc_gpu"
+
 #define SHARED_OBJ_SIZE 4096 // 4KB
+#define SHARED_OBJ_NAME_ROOT "/ECOFLOC_GPU_" 
+extern char* SHARED_OBJ_NAME;
 
 
 

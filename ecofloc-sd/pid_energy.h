@@ -23,6 +23,8 @@ under the License.
 
 #include <signal.h>
 #include <time.h>
+#include <limits.h>
+
 
 #include "sd.h"
 #include "results_map.h"

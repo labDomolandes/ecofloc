@@ -27,11 +27,18 @@ void *comm_ptr = NULL;
 FILE *export_file = NULL;
 results *global_results = NULL; 
 
+char* SHARED_OBJ_NAME = NULL; 
+
+
 static pthread_mutex_t pid_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t comm_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int create_results_object(const char* name, int* fd, void** ptr)
 {
+    /*
+    *Create shared memory space
+    */
+
     *fd = shm_open(name, O_CREAT | O_RDWR, 0666);
     
     if (*fd == -1)
@@ -47,6 +54,10 @@ int create_results_object(const char* name, int* fd, void** ptr)
         return -1;
     }
     
+    /*
+    *Set size and permissions: write + visible for different processes.  
+    */
+
     *ptr = mmap(0, SHARED_OBJ_SIZE, PROT_WRITE, MAP_SHARED, *fd, 0);
     if (*ptr == MAP_FAILED)
     {
@@ -68,17 +79,17 @@ int create_results_object(const char* name, int* fd, void** ptr)
                 filePath[strcspn(filePath, "\n")] = 0;
                 // Open the export file using the path from settings.conf
                 export_file = fopen(filePath, "a");
+
                 if (!export_file) 
-                {
                     perror("Failed to open export file specified in settings.conf");
-                }
             } 
             else 
             {
                 fprintf(stderr, "Failed to read the first line from settings.conf\n");
             }
             fclose(configFile);
-        } else 
+        } 
+        else 
         {
             perror("Failed to open settings.conf");
         }
@@ -89,19 +100,38 @@ int create_results_object(const char* name, int* fd, void** ptr)
 
 void initialize_results_object(void *identifier, int is_pid)
 {
-    pthread_mutex_lock(&pid_mutex);
-    create_results_object(PID_OBJ_NAME, &pid_fd, &pid_ptr);
 
-    global_results = (results*) pid_ptr;
+    pthread_mutex_lock(&pid_mutex);
+    
+    SHARED_OBJ_NAME = (char*) malloc(200); //for long commands' name
+    if (SHARED_OBJ_NAME == NULL) //if error
+    {
+        pthread_mutex_unlock(&pid_mutex);
+        return;
+    }
+
+    /*
+    * The memory starting at pid_ptr should be treated as a results object. 
+    * Any time we update global_results, we are directly updating the shared memory block
+    */
     
     if (is_pid) 
     {
+        sprintf(SHARED_OBJ_NAME, "%s%s%d", SHARED_OBJ_NAME_ROOT, "PID_" , *((int*) identifier));
+        create_results_object(SHARED_OBJ_NAME, &pid_fd, &pid_ptr);
+
+        global_results = (results*) pid_ptr;
         global_results->identifier.pid = *((int*) identifier);
         global_results->is_pid = 1;
         global_results->elapsed_time=0;
     } 
     else 
     {
+
+        sprintf(SHARED_OBJ_NAME, "%s%s%s", SHARED_OBJ_NAME_ROOT, "COMM_", (char*) identifier);
+        create_results_object(SHARED_OBJ_NAME, &pid_fd, &pid_ptr);
+
+        global_results = (results*) pid_ptr;
         strncpy(global_results->identifier.comm_name, (char*) identifier, 255);
         global_results->identifier.comm_name[255] = '\0'; // Ensure null-termination
         global_results->is_pid = 0;
@@ -112,7 +142,7 @@ void initialize_results_object(void *identifier, int is_pid)
     pthread_mutex_unlock(&pid_mutex);
 }
 
-void write_results(int pid, int time, double power, double energy)
+void write_results(int pid, int timestamp, double power, double energy)
 {
     pthread_mutex_lock(&pid_mutex);
 
@@ -128,10 +158,12 @@ void write_results(int pid, int time, double power, double energy)
     /*
     *In case of multithreading: Store the largest elapsed time
     */  
-    if(global_results->elapsed_time<time)
-        global_results->elapsed_time = time;
+    if(global_results->elapsed_time<timestamp)
+        global_results->elapsed_time = timestamp;
     
-    //data->count++;  // In case of tracking the accesses number number
+    /*
+    *data->count++;  // In case of tracking the accesses number number
+    */
 
     if (global_results->elapsed_time > 0) 
     {
@@ -140,7 +172,15 @@ void write_results(int pid, int time, double power, double energy)
 
     if (export_to_csv) 
     {
-        fprintf(export_file, "%d,%.2f,%.2f\n", pid, power, energy);
+        time_t now;
+        struct tm *local;
+        char time_str[100];
+        time ( &now );
+        local = localtime(&now);
+        strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", local);
+
+        fprintf(export_file, "%s,%d,%.2f,%.2f\n", time_str, pid, power, energy);
+        fflush(export_file);
     }    
     pthread_mutex_unlock(&pid_mutex);
 }
@@ -155,20 +195,20 @@ void print_results()
     {
         if (data->is_pid)
         {
-            printf("******ECO-FLOC -> CPU********\n");
-            printf("PID: %d\n", data->identifier.pid);
+            printf("*****************************\n");
+            printf("%s\n", SHARED_OBJ_NAME);
             printf("*****************************\n");
         }
         else
         {
-            printf("******ECO-FLOC -> CPU********\n");
-            printf("Comm Name: %s\n", data->identifier.comm_name);
+            printf("*****************************\n");
+            printf("%s\n", SHARED_OBJ_NAME);
             printf("*****************************\n");
         }
 
-        printf("Average Power (CPU): %.2f Watts\n", data->average_power);
-        printf("Total Energy (CPU): %.2f Joules\n", data->total_energy);
-        printf("Elapsed Time (CPU): %.2f seconds\n", data->elapsed_time);
+        printf("Average Power : %.2f Watts\n", data->average_power);
+        printf("Total Energy : %.2f Joules\n", data->total_energy);
+        printf("Elapsed Time : %.2f seconds\n", data->elapsed_time);
         //printf("Total Iterations: %d\n", data->count);
     }
     else
@@ -188,13 +228,12 @@ void close_results_object()
         perror("Unmapping failed");
 
     }
-
     if (close(pid_fd) == -1)
     {
         perror("Close failed");
     }
 
-    if (shm_unlink(PID_OBJ_NAME) == -1)
+    if (shm_unlink(SHARED_OBJ_NAME) == -1)
     {
         perror("PID object unlink failed");
     }
@@ -205,6 +244,7 @@ void close_results_object()
         export_file = NULL;
     }
 
+    free(SHARED_OBJ_NAME);
 
     pthread_mutex_unlock(&pid_mutex);
 }

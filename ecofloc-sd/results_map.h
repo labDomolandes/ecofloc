@@ -31,8 +31,12 @@
 #include <time.h>
 
 #define CONFIG_PATH "/opt/ecofloc/sd_settings.conf"
-#define PID_OBJ_NAME "/ecofloc_sd"
+
 #define SHARED_OBJ_SIZE 4096 // 4KB
+#define SHARED_OBJ_NAME_ROOT "/ECOFLOC_SD_" 
+extern char* SHARED_OBJ_NAME;
+
+
 
 
 /*

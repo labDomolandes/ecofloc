@@ -42,7 +42,8 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
 
     start_time = time(NULL);
 
-   
+     //68 years :)
+    if (timeout_s < 0) timeout_s = INT_MAX;
 
     while (keep_running && (time(NULL) - start_time) < timeout_s)
     {

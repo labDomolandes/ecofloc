@@ -25,6 +25,7 @@ under the License.
 #include <time.h>
 #include "results_map.h"
 #include <signal.h>
+#include <limits.h>
 
 #include "nic.h"
 

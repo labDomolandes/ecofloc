@@ -183,7 +183,7 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
     unsigned long long start_time = time(NULL);
 
 
-    while (keep_running && (time(NULL) - start_time) < timeout_s)
+    while (keep_running && (time(NULL) - start_time) <= timeout_s)
     {
         //Power variables and time calculations 
         map_frequencies(map);

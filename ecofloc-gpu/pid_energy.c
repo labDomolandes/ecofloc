@@ -91,7 +91,7 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
     //68 years :)
     if (timeout_s < 0) timeout_s = INT_MAX;
 
-    while (keep_running && (time(NULL) - start_time) < timeout_s)
+    while (keep_running && (time(NULL) - start_time) <= timeout_s)
     {
         pthread_mutex_lock(&fn_mutex); // Protect time values retrieval 
         float initial_power = gpu_power();

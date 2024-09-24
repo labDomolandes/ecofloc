@@ -14,10 +14,7 @@ To install the `ecofloc-sd` application on your computer, follow these steps:
 
 ## Usage
 
-To run the `ecofloc-sd` program, you need to execute it as root with the following parameters:
-
-- **Execute as Root:**
-  - Run the program using `sudo ./ecofloc-sd.out` with the necessary options.
+To run the `ecofloc-sd` program, you need to execute it as `root` with the following parameters:
 
 - **Options:**
   1. `-p`: Specify the Process ID (PID) of the process you want to analyze. Alternatively, you can use `-n` to specify the name of the application to measure.
@@ -27,9 +24,10 @@ To run the `ecofloc-sd` program, you need to execute it as root with the followi
   5. `-f`: Export the measurement results to a specified CSV file.
   
 
-  Example Command:
+  Examples:
 
-  `# sudo ./ecofloc-sd.out -p [PID or App Name] -i [interval in milliseconds] -t [total time in seconds] --d --f`
+  `# ./ecofloc-sd.out -p [PID] -i [interval in milliseconds] -t [total time in seconds] -d -f`
+  `# ./ecofloc-sd.out -n [App Name] -i [interval in milliseconds] -t [total time in seconds] -d -f`
 
 
 ## Important Considerations

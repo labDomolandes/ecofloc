@@ -75,10 +75,14 @@ int create_results_object(const char* name, int* fd, void** ptr)
             char filePath[1024];
             if (fgets(filePath, sizeof(filePath), configFile)) 
             {
-                // Remove any newline character at the end of filePath...to have a "clean" path
+                /*
+                * Remove any newline character at the end of filePath...to have a "clean" path
+                */ 
                 filePath[strcspn(filePath, "\n")] = 0;
-                // Open the export file using the path from settings.conf
-                export_file = fopen(filePath, "a");
+
+                char fullFilePath[1024]; // Concatenate SHARED_OBJ_NAME and ".csv" to filePath
+                snprintf(fullFilePath, sizeof(fullFilePath), "%s%s.csv", filePath, SHARED_OBJ_NAME);
+                export_file = fopen(fullFilePath, "a");
 
                 if (!export_file) 
                     perror("Failed to open export file specified in settings.conf");
@@ -124,6 +128,7 @@ void initialize_results_object(void *identifier, int is_pid)
         global_results->identifier.pid = *((int*) identifier);
         global_results->is_pid = 1;
         global_results->elapsed_time=0;
+        global_results->count=0;
     } 
     else 
     {
@@ -136,6 +141,7 @@ void initialize_results_object(void *identifier, int is_pid)
         global_results->identifier.comm_name[255] = '\0'; // Ensure null-termination
         global_results->is_pid = 0;
         global_results->elapsed_time=0;
+        global_results->count=0;
     }
 
 
@@ -153,21 +159,20 @@ void write_results(int pid, int timestamp, double power, double energy)
         return;
     }
     
-    global_results->total_energy += energy;
+    global_results->elapsed_time = timestamp;
 
-    /*
-    *In case of multithreading: Store the largest elapsed time
-    */  
-    if(global_results->elapsed_time<timestamp)
-        global_results->elapsed_time = timestamp;
+    global_results->total_energy += energy;
+    global_results->count++;  // Tracking the accesses number
     
-    /*
-    *data->count++;  // In case of tracking the accesses number number
-    */
 
     if (global_results->elapsed_time > 0) 
     {
-        global_results->average_power = global_results->total_energy / global_results->elapsed_time;
+        /*
+        *In case of considering the real elapsed time instead of the measurements quantity
+        * global_results->average_power = global_results->total_energy / global_results->elapsed_time;
+        */  
+        global_results->average_power = global_results->total_energy / global_results->count;
+
     }
 
     if (export_to_csv) 
@@ -181,7 +186,11 @@ void write_results(int pid, int timestamp, double power, double energy)
 
         fprintf(export_file, "%s,%d,%.2f,%.2f\n", time_str, pid, power, energy);
         fflush(export_file);
-    }    
+    }  
+
+    //printf("%f %d %f\n", global_results->total_energy, global_results->count, global_results->elapsed_time);
+
+
     pthread_mutex_unlock(&pid_mutex);
 }
 
@@ -208,7 +217,10 @@ void print_results()
 
         printf("Average Power : %.2f Watts\n", data->average_power);
         printf("Total Energy : %.2f Joules\n", data->total_energy);
-        printf("Elapsed Time : %.2f seconds\n", data->elapsed_time);
+
+        printf("*****************************\n");
+
+        //printf("Elapsed Time : %.2f seconds\n", data->elapsed_time);
         //printf("Total Iterations: %d\n", data->count);
     }
     else

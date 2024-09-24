@@ -27,7 +27,7 @@ To install the `ecofloc-gpu` application on your computer, follow these steps:
 
 ## Usage
 
-To run the `ecofloc-gpu` program, you need to execute it as root with the following parameters:
+To run the `ecofloc-gpu` program, you need to execute it as `root` with the following parameters:
 
 - **Options:**
   1. `-p`: Specify the Process ID (PID) of the process you want to analyze. Alternatively, you can use `-n` to specify the name of the application to measure.
@@ -36,9 +36,11 @@ To run the `ecofloc-gpu` program, you need to execute it as root with the follow
   4. `-d`: Enable Dynamic Mode, allowing the tool to evaluate applications that can be closed and reopened during the analysis.
   5. `-f`: Export the measurement results to a CSV file specified in `gpu-settings.conf`.
   
-  Example Command as root:
+  Examples:
 
-  `# ./ecofloc-gpu.out -p [PID or App Name] -i [interval in milliseconds] -t [total time in seconds] --d --f`
+  `# ./ecofloc-gpu.out -p [PID] -i [interval in milliseconds] -t [total time in seconds] -d -f`
+  `# ./ecofloc-gpu.out -n [App Name] -i [interval in milliseconds] -t [total time in seconds] -d -f`
+
 
 ## Important Considerations
 

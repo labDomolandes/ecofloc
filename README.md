@@ -48,7 +48,8 @@ To use EcoFloc, execute the `ecofloc` command as root with the following options
 3. **Total Analysis Time (`-t`):** Specifies the measurement duration. Entering a negative value allows for ongoing analysis, which can be terminated and results displayed by pressing `Ctrl+C`.
 4. **Measurement Interval (`-i`):** Determines the interval at which EcoFloc takes load and power measurements. Please consider that small interval values can lead to CPU overload.
 5. **Dynamic Mode (`-d`):** Enables EcoFloc to evaluate applications that may be closed and reopened during the analysis.
-6. **Export Mode (`-f`):** Exports the measurement results to a CSV file at the path specified in the `settings.conf` file. The file will include for each measured interval, the concerned PID, the average power, and the energy consumed.
+6. **Export Mode (`-f`):** Exports the measurement results to a CSV file at the path specified in the `settings.conf` file. The file will include, for each measured interval: the measurement time, the concerned PID, the average power, and the energy consumed.
+
 </p>
 
 ### Outputs
@@ -58,7 +59,6 @@ After executing `ecofloc`, the following output will be displayed:
 
 - **Average Power (in Watts):** The mean power consumption over the total analysis time.
 - **Energy Consumption (in Joules):** Total energy used during the total analysis time.
-- **Elapsed Time:** The total execution time elapsed (useful when `-t` is set with a negative value).
 </p>
 
 
@@ -110,12 +110,12 @@ To analyze the process with PID 20300 for 10 seconds at an interval of 1000 mill
 This command will output the results in the console in the following format:
 
 ```console
-******ECO-FLOC -> CPU********
-PID: 9865
+*****************************
+/ECOFLOC_RAM_PID_20300
 *****************************
 Average Power (CPU): 0.47 Watts
 Total CPU Energy (CPU): 4.72 Joules
-Elapsed Time (CPU): 10.00 seconds
+*****************************
 ```
 
 Additionally, the `-f` flag configures EcoFloc to write each interval's analysis to a CSV file specified in the `features.conf` file. In each row, the values are: PID, average power in this interval in Watts, and energy consumed in Joules in this interval.
@@ -133,14 +133,13 @@ Note that the `-d` option makes EcoFloc continue running even if `chrome` is clo
 This command will output the results in the console in the following format:
 
 ```console
-******ECO-FLOC -> GPU********
-PID: 9865
+*****************************
+/ECOFLOC_SD_COMM_chrome
 *****************************
 Average Power (GPU): 1.98 Watts
 Total GPU Energy (GPU): 39.6 Joules
-Elapsed Time (GPU): 20.00 seconds
+*****************************
 ```
-
 
 
 

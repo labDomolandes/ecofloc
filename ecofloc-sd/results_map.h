@@ -73,7 +73,7 @@ int create_results_object(const char* name, int* fd, void** ptr);
 *              Identifier: The pid or the command name is_pid: 1 if is pid 
 */
 void initialize_results_object(void *identifier, int is_pid);
-void write_results(int pid, int time, double power,  double energy);
+void write_results(int pid, int timestamp, double power,  double energy);
 void print_results();
 void close_results_object();
 

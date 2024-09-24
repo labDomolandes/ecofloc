@@ -28,7 +28,7 @@ To install the `ecofloc-nic` application on your computer, follow these steps:
 
 ## Usage
 
-To run the `ecofloc-nic` program, you need to execute it as root with the following parameters:
+To run the `ecofloc-nic` program, you need to execute it as `root` with the following parameters:
 
 - **Options:**
   1. `-p`: Specify the Process ID (PID) of the process you want to analyze. Alternatively, you can use `-n` to specify the name of the application to measure.
@@ -38,9 +38,10 @@ To run the `ecofloc-nic` program, you need to execute it as root with the follow
   5. `-f`: Export the measurement results to a specified CSV file.
   
 
-  Example Command:
+ Examples:
 
-  `# sudo ./ecofloc-nic.out -p [PID or App Name] -i [interval in milliseconds] -t [total time in seconds] --d --f`
+  `# ./ecofloc-nic.out -p [PID] -i [interval in milliseconds] -t [total time in seconds] -d -f`
+  `# ./ecofloc-nic.out -p [App Name] -i [interval in milliseconds] -t [total time in seconds] -d -f`
 
 
 ## Important Considerations

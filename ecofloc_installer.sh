@@ -4,6 +4,12 @@
 number_hw_success=0
 total_hw_success=5
 
+cpu_success=0
+ram_success=0
+nic_success=0
+sd_success=0
+gpu_success=0
+
 ################################################################################
 #############################         TOOLS    #################################
 ################################################################################
@@ -38,21 +44,55 @@ print_success()
 {
     local color_reset='\033[0m'
     local color_green='\033[0;32m'
+    local color_red='\033[0;31m'
     local color_yellow='\033[1;33m'
 
-    if [ "$number_hw_success" -lt "$total_hw_success" ]; then
-        printf "\n"
-        echo -e "${color_yellow}FLOC was successfully installed in the /opt/ directory but some of the hardware components were not considered due to a dependency failure.${color_reset}"
-        echo -e "${color_green}To uninstall it, please, run make uninstall from the FLOC git folder${color_reset}"
-        printf "\n"
+    echo -e "\n**********************************"
+    echo -e "****** Installation Summary ******"
+    echo -e "**********************************\n"
+
+    if [ "$cpu_success" -eq 1 ]; then
+        echo -e "EcoFLOC for CPU installed... ${color_green}[OK]${color_reset}"
     else
-        printf "\n"
+        echo -e "EcoFLOC for CPU installed... ${color_red}[FAIL]${color_reset}"
+    fi
+
+    if [ "$ram_success" -eq 1 ]; then
+        echo -e "EcoFLOC for RAM installed... ${color_green}[OK]${color_reset}"
+    else
+        echo -e "EcoFLOC for RAM installed... ${color_red}[FAIL]${color_reset}"
+    fi
+
+    if [ "$nic_success" -eq 1 ]; then
+        echo -e "EcoFLOC for NIC installed... ${color_green}[OK]${color_reset}"
+    else
+        echo -e "EcoFLOC for NIC installed... ${color_red}[FAIL]${color_reset}"
+    fi
+
+    if [ "$sd_success" -eq 1 ]; then
+        echo -e "EcoFLOC for SD installed... ${color_green}[OK]${color_reset}"
+    else
+        echo -e "EcoFLOC for SD installed... ${color_red}[FAIL]${color_reset}"
+    fi
+
+    if [ "$gpu_success" -eq 1 ]; then
+        echo -e "EcoFLOC for GPU installed... ${color_green}[OK]${color_reset}"
+    else
+        echo -e "EcoFLOC for GPU installed... ${color_red}[FAIL]${color_reset}"
+    fi
+
+    echo -e "\n********************************\n"
+
+    if [ "$cpu_success" -eq 1 ] && [ "$ram_success" -eq 1 ] && [ "$nic_success" -eq 1 ] && [ "$sd_success" -eq 1 ] && [ "$gpu_success" -eq 1 ]; then
         echo -e "${color_green}FLOC was SUCCESSFULLY installed in your system in the /opt/ directory${color_reset}"
         echo -e "${color_green}To uninstall it, please, run make uninstall from the FLOC git folder${color_reset}"
-        printf "\n"
+    else
+        echo -e "${color_yellow}FLOC was partially installed in /opt/. Some hardware components could not be installed.${color_reset}"
+        echo -e "${color_yellow}To uninstall ecofloc, please, run make uninstall from the FLOC git folder${color_reset}"
     fi
-    echo -e "${color_green}Please, always run FLOC applications as root${color_reset}"
 
+    echo -e "${color_green}Please, always run FLOC applications as root${color_reset}"
+    echo -e "\n********************************\n"
 }
 
 # PRINT STEP'S RESULT
@@ -87,7 +127,9 @@ install_gui()
 check_root() 
 {
     if [ "$EUID" -ne 0 ]; then
+        echo        "*****************************************************************"
         print_status "Checking if running as root. Please run the installer as root." 0
+        echo        "*****************************************************************"
         return 1
     else
         print_status "Checking if running as root" 1
@@ -100,7 +142,9 @@ check_root()
 check_gcc() 
 {
     if ! command -v gcc &> /dev/null; then
+        echo        "****************************************************"
         print_status "Checking if gcc is installed. Please, install gcc" 0
+        echo        "****************************************************"
         return 1
     else
         print_status "Checking if gcc is installed" 1
@@ -415,7 +459,7 @@ main() {
     check_cpu
     result_cpu=$?
     if [ "$result_cpu" -eq 0 ]; then 
-        ((number_hw_success++))
+        ((cpu_success++))
         make create_ecofloc_folder > /dev/null 
         make clean_cpu > /dev/null
 
@@ -440,7 +484,7 @@ main() {
     check_ram
     result_ram=$?
     if [ "$result_ram" -eq 0 ]; then 
-        ((number_hw_success++))
+        ((ram_success++))
         make create_ecofloc_folder > /dev/null 
         make clean_ram > /dev/null
 
@@ -465,7 +509,7 @@ main() {
     check_nic
     result_nic=$?
     if [ "$result_nic" -eq 0 ]; then 
-        ((number_hw_success++))
+        ((nic_success++))
         make create_ecofloc_folder > /dev/null 
         make clean_nic > /dev/null
 
@@ -490,7 +534,7 @@ main() {
     check_gpu
     result_gpu=$?
     if [ "$result_gpu" -eq 0 ]; then 
-        ((number_hw_success++))
+        ((gpu_success++))
         make create_ecofloc_folder > /dev/null 
         make clean_gpu > /dev/null
 
@@ -516,7 +560,7 @@ main() {
     check_sd
     result_sd=$?
     if [ "$result_sd" -eq 0 ]; then 
-        ((number_hw_success++))
+        ((sd_success++))
         make create_ecofloc_folder > /dev/null 
         make clean_sd > /dev/null
 
@@ -537,13 +581,16 @@ main() {
         fi
     fi
 
-    
+    print_success
+
     # Do you want the FLOC GUI?
     read -p "Do you want to install the FLOC GUI? [Y/N]: " install_gui_choice
     case "$install_gui_choice" in 
         [Yy]* )
             make install_gui
-            print_status "execute the command flocUI as root and follow the instructions :)." 1
+            echo    -e    "\n*******************************************************************"
+            print_status "execute the command ecoflocUI as root and follow the instructions :)." 1
+            echo     -e  "*******************************************************************"
             ;;
         [Nn]* )
             echo "Skipping FLOC GUI installation."
@@ -554,7 +601,7 @@ main() {
     esac
 
 
-    print_success
+    
 
 
 }

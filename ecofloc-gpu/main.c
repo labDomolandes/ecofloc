@@ -81,14 +81,15 @@ int main(int argc, char **argv)
     {
         initialize_results_object(&pid, 1);  //defined in results_map.h
         pid_energy(pid, (int)interval_ms, (int)total_time_s);
+        print_results(1); //pid
     }
     else if (processName != NULL)
     {
         initialize_results_object(processName, 0);  //defined in results_map.h
         comm_energy(processName, (int)interval_ms, (int)total_time_s);
+        print_results(0); //not pid
     }
 
-    print_results();
     close_results_object();  
 
     return 0;

@@ -67,6 +67,9 @@ int create_results_object(const char* name, int* fd, void** ptr)
         return -1;
     }
 
+    memset(*ptr, 0, SHARED_OBJ_SIZE);
+
+
     if(export_to_csv==1)
     {
         FILE *configFile = fopen(CONFIG_PATH, "r");
@@ -134,9 +137,9 @@ void initialize_results_object(void *identifier, int is_pid)
     {
 
         sprintf(SHARED_OBJ_NAME, "%s%s%s", SHARED_OBJ_NAME_ROOT, "COMM_", (char*) identifier);
-        create_results_object(SHARED_OBJ_NAME, &pid_fd, &pid_ptr);
+        create_results_object(SHARED_OBJ_NAME, &pid_fd, &comm_ptr);
 
-        global_results = (results*) pid_ptr;
+        global_results = (results*) comm_ptr;
         strncpy(global_results->identifier.comm_name, (char*) identifier, 255);
         global_results->identifier.comm_name[255] = '\0'; // Ensure null-termination
         global_results->is_pid = 0;
@@ -148,8 +151,10 @@ void initialize_results_object(void *identifier, int is_pid)
     pthread_mutex_unlock(&pid_mutex);
 }
 
+
 void write_results(int pid, int timestamp, double power, double energy)
 {
+
     pthread_mutex_lock(&pid_mutex);
 
     if (global_results == NULL)
@@ -160,7 +165,6 @@ void write_results(int pid, int timestamp, double power, double energy)
     }
     
     global_results->elapsed_time = timestamp;
-
     global_results->total_energy += energy;
     global_results->count++;  // Tracking the accesses number
     
@@ -172,7 +176,6 @@ void write_results(int pid, int timestamp, double power, double energy)
         * global_results->average_power = global_results->total_energy / global_results->elapsed_time;
         */  
         global_results->average_power = global_results->total_energy / global_results->count;
-
     }
 
     if (export_to_csv) 
@@ -195,11 +198,15 @@ void write_results(int pid, int timestamp, double power, double energy)
 }
 
 
-
-void print_results()
+void print_results(int is_pid)
 {
     pthread_mutex_lock(&pid_mutex);
-    results *data = (results*) pid_ptr;
+    
+    results *data;
+
+    if (is_pid) data = (results*) pid_ptr;
+    else data = (results*) comm_ptr;
+
     if (data != NULL)
     {
         if (data->is_pid)

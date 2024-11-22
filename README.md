@@ -68,7 +68,7 @@ After executing `ecofloc`, the following output will be displayed:
 
 To install EcoFloc, run the following command in your terminal as root:
 ```bash
-/bin/bash/floc_installer.sh
+/bin/bash ecofloc_installer.sh
 ```
 This script requires Python3 to be installed on your system. It installs both the EcoFloc console application and a user interface that can be executed with the `ecoflocUI` command.
 
@@ -104,7 +104,7 @@ To use EcoFloc and specify which application to execute, run:
 To analyze the process with PID 20300 for 10 seconds at an interval of 1000 milliseconds for the CPU, use the following command:
 
 ```bash
-./floc --cpu -p 20300 -i 1000 -t 10 -f
+./ecofloc --cpu -p 20300 -i 1000 -t 10 -f
 ```
 
 This command will output the results in the console in the following format:
@@ -125,7 +125,7 @@ Additionally, the `-f` flag configures EcoFloc to write each interval's analysis
 To analyze the Chrome application (all its PIDs) at an interval of 1000 milliseconds indefinitely (`t` is a negative number) until the user presses Ctrl+C for the GPU, use the following command:
 
 ```bash
-./floc --gpu -n chrome -i 1000 -t -1 -d
+./ecofloc --gpu -n chrome -i 1000 -t -1 -d
 ```
 
 Note that the `-d` option makes EcoFloc continue running even if `chrome` is closed. When this happens, EcoFloc will wait until Chrome is reopened.

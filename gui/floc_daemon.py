@@ -32,6 +32,9 @@ import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import subprocess
 
+#the shared variabmle names 
+import shared_vars
+
 
 ###################################################################################
 ##       PANEL LAYOUT 
@@ -209,7 +212,7 @@ def execute_command(args):
     # Adjusting command based on mode, dynamic_active, and export_json_active
     flag = '-n' if mode == 'app_name' else '-p'
     
-    command = f"floc --{hardware} {flag} {pid_or_app_value} -i {interval} -t {time}"
+    command = f"ecofloc --{hardware} {flag} {pid_or_app_value} -i {interval} -t {time}"
     
     if dynamic_active:
         command += " -d true"
@@ -312,9 +315,22 @@ def register_floc_daemon_callbacks(app):
             dynamic_active = 'dynamic' in dynamic_mode
             export_json_active = 'export_json' in export_json_mode
 
+            # Update shared_cpu based on pid_or_app
+            if pid_or_app == 'pid':
+                shared_vars.shared_cpu = f"ECOFLOC_CPU_PID_{pid_or_app_value}"
+                shared_vars.shared_ram = f"ECOFLOC_RAM_PID_{pid_or_app_value}"
+                shared_vars.shared_nic = f"ECOFLOC_NIC_PID_{pid_or_app_value}"
+                shared_vars.shared_sd = f"ECOFLOC_SD_PID_{pid_or_app_value}"
+                    
+            elif pid_or_app == 'app_name':
+                shared_vars.shared_cpu = f"ECOFLOC_CPU_COMM_{pid_or_app_value}"
+                shared_vars.shared_ram = f"ECOFLOC_RAM_COMM_{pid_or_app_value}"
+                shared_vars.shared_nic = f"ECOFLOC_NIC_COMM_{pid_or_app_value}"
+                shared_vars.shared_sd = f"ECOFLOC_SD_COMM_{pid_or_app_value}"
+
             if pid_or_app == 'activity_name':
                 activity_names = pid_or_app_value.split(', ')
-                #FORK APPS IN THE ACTIVITY -> ONLY LOOPS THE LIST AN FORK THE FUNCTION
+                # FORK APPS IN THE ACTIVITY -> ONLY LOOPS THE LIST AND FORKS THE FUNCTION
                 args = [(hardware, activity_name, interval, time, 'app_name', dynamic_active, export_json_active) for hardware in hardware_list for activity_name in activity_names]
             else:
                 args = [(hardware, pid_or_app_value, interval, time, pid_or_app, dynamic_active, export_json_active) for hardware in hardware_list]
@@ -324,4 +340,7 @@ def register_floc_daemon_callbacks(app):
                 commands = list(results)
 
             return html.Pre(json.dumps(commands, indent=2))
+        
         raise PreventUpdate
+
+

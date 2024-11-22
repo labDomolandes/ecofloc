@@ -44,23 +44,27 @@ extern char* SHARED_OBJ_NAME;
 *              Values are written to a shared memory portion, enabling IPC. 
 */
 
+#pragma pack(push, 1) // for rpc issues: Align structure fields to 1-byte boundaries, disabling padding.
 typedef struct
 {
     union { //for pid OR command name
-        int pid; 
+        int pid;
         char comm_name[256];
     } identifier;
 
     int is_pid;
     double average_power;
     double total_energy;
-    double elapsed_time; 
-    int count; 
-} results;
+    unsigned long long elapsed_time;
+    int count;
 
-extern results *global_results; 
-extern int export_to_csv; 
-extern FILE *export_file; 
+} results;
+#pragma pack(pop) 
+
+
+extern results *global_results;
+extern int export_to_csv;
+extern FILE *export_file;
 
 
 /*
@@ -69,7 +73,7 @@ extern FILE *export_file;
 int create_results_object(const char* name, int* fd, void** ptr);
 /*
 * Description: This initializes the results structure and calls create_results_object()
-*              Identifier: The pid or the command name is_pid: 1 if is pid 
+*              Identifier: The pid or the command name is_pid: 1 if is pid
 */
 void initialize_results_object(void *identifier, int is_pid);
 void write_results(int pid, int timestamp, double power,  double energy);

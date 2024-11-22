@@ -30,6 +30,7 @@
 #include <sys/mman.h>
 #include <time.h>
 
+
 #define CONFIG_PATH "/opt/ecofloc/cpu_settings.conf"
 
 #define SHARED_OBJ_SIZE 4096 // 4KB
@@ -41,7 +42,7 @@ extern char* SHARED_OBJ_NAME;
 * Description: The results structure stores the current values of an energy measuring interval. 
 *              Values are written to a shared memory portion, enabling IPC. 
 */
-
+#pragma pack(push, 1) // for rpc issues: Align structure fields to 1-byte boundaries, disabling padding.
 typedef struct
 {
     union { //for pid OR command name
@@ -52,10 +53,11 @@ typedef struct
     int is_pid;
     double average_power;
     double total_energy;
-    double elapsed_time; 
+    unsigned long long elapsed_time; 
     int count; 
     
 } results;
+#pragma pack(pop) 
 
 extern results *global_results; 
 extern int export_to_csv; 

@@ -24,6 +24,16 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import plotly.graph_objs as go
 
+#the shared variable names 
+import shared_vars
+
+
+#for shared memory management
+import mmap
+import posix_ipc
+import struct
+
+
 # Initialize global lists to store x and y values for the graph
 x_power_values = []
 x_energy_values = []
@@ -108,63 +118,95 @@ def power_plotter_layout():
 #######################CURRENT POWER##########################################
 
 
-def get_CPU_current_power():
 
-    cpu_power = 0.0  
+def get_CPU_current_power():
+    SHARED_MEMORY_PATH = f"/dev/shm/{shared_vars.shared_cpu}"
+    SHARED_MEMORY_SIZE = 288  # Total size of the structure
+
     try:
-        with open('/dev/shm/CPU_shared_memory', 'r') as file:
-            lines = file.readlines()
-            for line in lines:
-                if "current_power=" in line:
-                    cpu_power = float(line.split('=')[1].strip())
-                    return cpu_power
+        with open(SHARED_MEMORY_PATH, "rb") as shm_file:
+            with mmap.mmap(shm_file.fileno(), SHARED_MEMORY_SIZE, access=mmap.ACCESS_READ) as shm:
+                fmt = "=256s i d d Q i"  # Corrected format string
+                unpacked_data = struct.unpack(fmt, shm.read(SHARED_MEMORY_SIZE))
+
+                # Extract average_power (index 2 after corrections)
+                average_power = unpacked_data[2]
+
+                return average_power
+    except FileNotFoundError:
+        print(f"Shared memory file not found: {SHARED_MEMORY_PATH}")
     except Exception as e:
-        print(f"Failed to read from /dev/shm/CPU_shared_memory: {e}")
-        return cpu_power
+        print(f"Error reading shared memory: {e}")
+
+    return 0.0  # Default value if reading fails
+
+
 
 def get_RAM_current_power():
+    SHARED_MEMORY_PATH = f"/dev/shm/{shared_vars.shared_ram}"
+    SHARED_MEMORY_SIZE = 288  # Total size of the structure
 
-    ram_power = 0.0  
     try:
-        with open('/dev/shm/RAM_shared_memory', 'r') as file:
-            lines = file.readlines()
-            for line in lines:
-                if "current_power=" in line:
-                    ram_power = float(line.split('=')[1].strip())
-                    return ram_power
+        with open(SHARED_MEMORY_PATH, "rb") as shm_file:
+            with mmap.mmap(shm_file.fileno(), SHARED_MEMORY_SIZE, access=mmap.ACCESS_READ) as shm:
+                fmt = "=256s i d d Q i"  # Corrected format string
+                unpacked_data = struct.unpack(fmt, shm.read(SHARED_MEMORY_SIZE))
+
+                # Extract average_power (index 2 after corrections)
+                average_power = unpacked_data[2]
+
+                return average_power
+    except FileNotFoundError:
+        print(f"Shared memory file not found: {SHARED_MEMORY_PATH}")
     except Exception as e:
-        print(f"Failed to read from /dev/shm/CPU_shared_memory: {e}")
-        return ram_power
-    
+        print(f"Error reading shared memory: {e}")
+
+    return 0.0  # Default value if reading fails
+
+
 def get_SD_current_power():
+    SHARED_MEMORY_PATH = f"/dev/shm/{shared_vars.shared_sd}"
+    SHARED_MEMORY_SIZE = 288  # Total size of the structure
 
-    sd_power = 0.0
     try:
-        with open('/dev/shm/SD_shared_memory', 'r') as file:
-            lines = file.readlines()
-            for line in lines:
-                if "current_power=" in line:
-                    sd_power = float(line.split('=')[1].strip())
-                    return sd_power
+        with open(SHARED_MEMORY_PATH, "rb") as shm_file:
+            with mmap.mmap(shm_file.fileno(), SHARED_MEMORY_SIZE, access=mmap.ACCESS_READ) as shm:
+                fmt = "=256s i d d Q i"  # Corrected format string
+                unpacked_data = struct.unpack(fmt, shm.read(SHARED_MEMORY_SIZE))
+
+                # Extract average_power (index 2 after corrections)
+                average_power = unpacked_data[2]
+
+                return average_power
+    except FileNotFoundError:
+        print(f"Shared memory file not found: {SHARED_MEMORY_PATH}")
     except Exception as e:
-        print(f"Failed to read from /dev/shm/SD_shared_memory: {e}")
-        return sd_power
+        print(f"Error reading shared memory: {e}")
+
+    return 0.0  # Default value if reading fails
 
 
 def get_NIC_current_power():
+    SHARED_MEMORY_PATH = f"/dev/shm/{shared_vars.shared_nic}"
+    SHARED_MEMORY_SIZE = 288  # Total size of the structure
 
-    nic_power = 0.0  
     try:
-        with open('/dev/shm/NIC_shared_memory', 'r') as file:
-            lines = file.readlines()
-            for line in lines:
-                if "current_power=" in line:
-                    nic_power = float(line.split('=')[1].strip())
-                    return nic_power
+        with open(SHARED_MEMORY_PATH, "rb") as shm_file:
+            with mmap.mmap(shm_file.fileno(), SHARED_MEMORY_SIZE, access=mmap.ACCESS_READ) as shm:
+                fmt = "=256s i d d Q i"  # Corrected format string
+                unpacked_data = struct.unpack(fmt, shm.read(SHARED_MEMORY_SIZE))
+
+                # Extract average_power (index 2 after corrections)
+                average_power = unpacked_data[2]
+
+                return average_power
+    except FileNotFoundError:
+        print(f"Shared memory file not found: {SHARED_MEMORY_PATH}")
     except Exception as e:
-        print(f"Failed to read from /dev/shm/NIC_shared_memory: {e}")
-        return nic_power
-    
+        print(f"Error reading shared memory: {e}")
+
+    return 0.0  # Default value if reading fails
+
 
 
 
@@ -173,65 +215,83 @@ def get_NIC_current_power():
 
 
 def get_CPU_cumulated_energy():
+    SHARED_MEMORY_PATH = f"/dev/shm/{shared_vars.shared_cpu}"
+    SHARED_MEMORY_SIZE = 288
 
-        cpu_power = 0.0  
-        try:
-            with open('/dev/shm/CPU_shared_memory', 'r') as file:
-                lines = file.readlines()
-                for line in lines:
-                    if "total_energy=" in line:
-                        cpu_power = float(line.split('=')[1].strip())
-                        return cpu_power
-        except Exception as e:
-            print(f"Failed to read from /dev/shm/CPU_shared_memory: {e}")
-            return cpu_power
+    try:
+        with open(SHARED_MEMORY_PATH, "rb") as shm_file:
+            with mmap.mmap(shm_file.fileno(), SHARED_MEMORY_SIZE, access=mmap.ACCESS_READ) as shm:
+                fmt = "=256s i d d Q i"
+                unpacked_data = struct.unpack(fmt, shm.read(SHARED_MEMORY_SIZE))
+
+                total_energy = unpacked_data[3]  # Total energy is at index 3
+                return total_energy
+    except FileNotFoundError:
+        print(f"Shared memory file not found: {SHARED_MEMORY_PATH}")
+    except Exception as e:
+        print(f"Error reading shared memory: {e}")
+
+    return 0.0
 
 
 def get_RAM_cumulated_energy():
+    SHARED_MEMORY_PATH = f"/dev/shm/{shared_vars.shared_ram}"
+    SHARED_MEMORY_SIZE = 288
 
-        ram_power = 0.0  
-        try:
-            with open('/dev/shm/RAM_shared_memory', 'r') as file:
-                lines = file.readlines()
-                for line in lines:
-                    if "total_power=" in line:
-                        ram_power = float(line.split('=')[1].strip())
-                        return ram_power
-        except Exception as e:
-            print(f"Failed to read from /dev/shm/CPU_shared_memory: {e}")
-            return ram_power
+    try:
+        with open(SHARED_MEMORY_PATH, "rb") as shm_file:
+            with mmap.mmap(shm_file.fileno(), SHARED_MEMORY_SIZE, access=mmap.ACCESS_READ) as shm:
+                fmt = "=256s i d d Q i"
+                unpacked_data = struct.unpack(fmt, shm.read(SHARED_MEMORY_SIZE))
+
+                total_energy = unpacked_data[3]
+                return total_energy
+    except FileNotFoundError:
+        print(f"Shared memory file not found: {SHARED_MEMORY_PATH}")
+    except Exception as e:
+        print(f"Error reading shared memory: {e}")
+
+    return 0.0
+
 
 def get_SD_cumulated_energy():
+    SHARED_MEMORY_PATH = f"/dev/shm/{shared_vars.shared_sd}"
+    SHARED_MEMORY_SIZE = 288
 
-    sd_power = 0.0
     try:
-        with open('/dev/shm/SD_shared_memory', 'r') as file:
-            lines = file.readlines()
-            for line in lines:
-                if "total_power=" in line:
-                    sd_power = float(line.split('=')[1].strip())
-                    return sd_power
+        with open(SHARED_MEMORY_PATH, "rb") as shm_file:
+            with mmap.mmap(shm_file.fileno(), SHARED_MEMORY_SIZE, access=mmap.ACCESS_READ) as shm:
+                fmt = "=256s i d d Q i"
+                unpacked_data = struct.unpack(fmt, shm.read(SHARED_MEMORY_SIZE))
+
+                total_energy = unpacked_data[3]
+                return total_energy
+    except FileNotFoundError:
+        print(f"Shared memory file not found: {SHARED_MEMORY_PATH}")
     except Exception as e:
-        print(f"Failed to read from /dev/shm/SD_shared_memory: {e}")
-        return sd_power
+        print(f"Error reading shared memory: {e}")
+
+    return 0.0
+
 
 def get_NIC_cumulated_energy():
-    nic_power = 0.0  
+    SHARED_MEMORY_PATH = f"/dev/shm/{shared_vars.shared_nic}"
+    SHARED_MEMORY_SIZE = 288
+
     try:
-        with open('/dev/shm/NIC_shared_memory', 'r') as file:
-            lines = file.readlines()
-            for line in lines:
-                if "total_power=" in line:
-                    nic_power = float(line.split('=')[1].strip())
-                    return nic_power
+        with open(SHARED_MEMORY_PATH, "rb") as shm_file:
+            with mmap.mmap(shm_file.fileno(), SHARED_MEMORY_SIZE, access=mmap.ACCESS_READ) as shm:
+                fmt = "=256s i d d Q i"
+                unpacked_data = struct.unpack(fmt, shm.read(SHARED_MEMORY_SIZE))
+
+                total_energy = unpacked_data[3]
+                return total_energy
+    except FileNotFoundError:
+        print(f"Shared memory file not found: {SHARED_MEMORY_PATH}")
     except Exception as e:
-        print(f"Failed to read from /dev/shm/NIC_shared_memory: {e}")
-        return nic_power
+        print(f"Error reading shared memory: {e}")
 
-
-
-
-
+    return 0.0
 
 
 ###################################################################################
@@ -287,6 +347,7 @@ def register_power_plotter_callbacks(app):
     prevent_initial_call=True
     )
     def update_graph_live(n):
+        
         # Append new data points for power and maintain window size
         x_power_values.append(n)
         y_power_cpu_values.append(get_CPU_current_power())

@@ -81,7 +81,7 @@ setup_venv: $(REQUIREMENTS)
 
 # Copy GUI files
 copy_files:
-	cp gui/flocUI.py gui/energy_plotter.py gui/floc_daemon.py gui/power_plotter.py gui/system_monitor.py $(GUI_DIR)
+	cp gui/ecoflocUI.py gui/energy_plotter.py gui/floc_daemon.py gui/power_plotter.py gui/system_monitor.py $(GUI_DIR)
 	cp -r gui/assets $(GUI_DIR)
 	cp gui/execute_gui.sh $(GUI_DIR)
 	cp activities.yaml $(FLOC_DIR)

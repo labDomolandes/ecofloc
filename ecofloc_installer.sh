@@ -460,10 +460,12 @@ main() {
     result_cpu=$?
     if [ "$result_cpu" -eq 0 ]; then 
         ((cpu_success++))
+        ((number_hw_success++))
         make create_ecofloc_folder > /dev/null 
         make clean_cpu > /dev/null
 
         make cpu > /dev/null
+        
         result_make_cpu=$?
         if [ "$result_make_cpu" -ne 0 ]; then
             print_status "Compiling CPU app." 0     
@@ -485,6 +487,7 @@ main() {
     result_ram=$?
     if [ "$result_ram" -eq 0 ]; then 
         ((ram_success++))
+        ((number_hw_success++))
         make create_ecofloc_folder > /dev/null 
         make clean_ram > /dev/null
 
@@ -510,6 +513,7 @@ main() {
     result_nic=$?
     if [ "$result_nic" -eq 0 ]; then 
         ((nic_success++))
+        ((number_hw_success++))
         make create_ecofloc_folder > /dev/null 
         make clean_nic > /dev/null
 
@@ -535,6 +539,7 @@ main() {
     result_gpu=$?
     if [ "$result_gpu" -eq 0 ]; then 
         ((gpu_success++))
+        ((number_hw_success++))
         make create_ecofloc_folder > /dev/null 
         make clean_gpu > /dev/null
 
@@ -561,6 +566,7 @@ main() {
     result_sd=$?
     if [ "$result_sd" -eq 0 ]; then 
         ((sd_success++))
+        ((number_hw_success++))
         make create_ecofloc_folder > /dev/null 
         make clean_sd > /dev/null
 
@@ -581,6 +587,15 @@ main() {
         fi
     fi
 
+    
+    # ecofloc
+
+    if [ "$number_hw_success" -ge 1 ]; then
+        make floc > /dev/null
+        make install_floc > /dev/null
+    fi
+
+
     print_success
 
     # Do you want the FLOC GUI?
@@ -600,8 +615,6 @@ main() {
             ;;
     esac
 
-
-    
 
 
 }

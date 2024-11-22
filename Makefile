@@ -17,6 +17,7 @@ cpu:
 	$(MAKE) -C ecofloc-cpu
 install_cpu:
 	cp ecofloc-cpu/ecofloc-cpu.out ecofloc-cpu/cpu_settings.conf ecofloc-cpu/cpu_features.conf $(FLOC_DIR)
+	chmod +x $(FLOC_DIR)ecofloc-cpu.out
 clean_cpu:
 	$(MAKE) -C ecofloc-cpu clean
 
@@ -26,6 +27,7 @@ gpu:
 	$(MAKE) -C ecofloc-gpu
 install_gpu:
 	cp ecofloc-gpu/ecofloc-gpu.out ecofloc-gpu/gpu_settings.conf $(FLOC_DIR)
+	chmod +x $(FLOC_DIR)ecofloc-gpu.out
 clean_gpu:
 	$(MAKE) -C ecofloc-gpu clean
 
@@ -35,6 +37,7 @@ sd:
 	$(MAKE) -C ecofloc-sd
 install_sd:
 	cp ecofloc-sd/ecofloc-sd.out ecofloc-sd/sd_features.conf ecofloc-sd/sd_settings.conf $(FLOC_DIR)
+	chmod +x $(FLOC_DIR)ecofloc-sd.out
 clean_sd:
 	$(MAKE) -C ecofloc-sd clean
 	
@@ -44,6 +47,7 @@ ram:
 	$(MAKE) -C ecofloc-ram
 install_ram:
 	cp ecofloc-ram/ecofloc-ram.out ecofloc-ram/ram_settings.conf $(FLOC_DIR)
+	chmod +x $(FLOC_DIR)ecofloc-ram.out
 clean_ram:
 	$(MAKE) -C ecofloc-ram clean
 
@@ -53,6 +57,7 @@ nic:
 	$(MAKE) -C ecofloc-nic
 install_nic:
 	cp ecofloc-nic/ecofloc-nic.out ecofloc-nic/nic_features.conf ecofloc-nic/nic_settings.conf $(FLOC_DIR)
+	chmod +x $(FLOC_DIR)ecofloc-nic.out
 clean_nic:
 	$(MAKE) -C ecofloc-nic clean
 
@@ -62,7 +67,9 @@ floc:
 	gcc ecofloc.c -o ecofloc
 install_floc:
 	cp ecofloc $(FLOC_DIR)
+	chmod +x $(FLOC_DIR)ecofloc
 	ln -sf $(FLOC_DIR)ecofloc $(BIN_DIR)/ecofloc
+	chmod +x $(BIN_DIR)/ecofloc
 clean_floc:
 	rm -f ecofloc
 
@@ -97,8 +104,7 @@ clean:
 	rm -f ecofloc
 
 install: create_ecofloc_folder install_cpu install_gpu install_sd install_ram install_nic install_floc
-	chmod +x $(FLOC_DIR)ecofloc-cpu.out $(FLOC_DIR)ecofloc-gpu.out $(FLOC_DIR)ecofloc-sd.out $(FLOC_DIR)ecofloc-ram.out $(FLOC_DIR)ecofloc-nic.out $(FLOC_DIR)ecofloc
-	chmod +x $(BIN_DIR)/ecofloc
+	 
 uninstall:
 	rm -rf $(FLOC_DIR)
 	rm -f $(BIN_DIR)/ecofloc $(BIN_DIR)/ecoflocUI 

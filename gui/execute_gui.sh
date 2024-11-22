@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source /opt/ecofloc/gui/venv/bin/activate
-python /opt/ecofloc/gui/flocUI.py &
+python /opt/ecofloc/gui/ecoflocUI.py &
 FLOC_PID=$!
 
 # KILL

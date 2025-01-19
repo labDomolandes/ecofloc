@@ -33,9 +33,10 @@
 #define CONFIG_PATH "/opt/ecofloc/sd_settings.conf"
 
 #define SHARED_OBJ_SIZE 4096 // 4KB
-#define SHARED_OBJ_NAME_ROOT "/ECOFLOC_SD_" 
-extern char* SHARED_OBJ_NAME;
+#define SHARED_OBJ_NAME_ROOT "/ECOFLOC_SD_"
 
+extern char* SHARED_OBJ_NAME;
+extern char* filePath;
 
 
 

@@ -29,7 +29,6 @@ results *global_results = NULL;
 
 char* SHARED_OBJ_NAME = NULL; 
 
-
 static pthread_mutex_t pid_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t comm_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -69,26 +68,16 @@ int create_results_object(const char* name, int* fd, void** ptr)
 
     memset(*ptr, 0, SHARED_OBJ_SIZE);
 
-
-    if(export_to_csv==1)
+    char fullFilePath[1024]; // Concatenate SHARED_OBJ_NAME and ".csv" to filePath
+    if ((export_to_csv == 1) && (strcmp(filePath, "default") == 0)) // If the path was not specified via main
     {
         FILE *configFile = fopen(CONFIG_PATH, "r");
         if (configFile) 
         {
-            char filePath[1024];
-            if (fgets(filePath, sizeof(filePath), configFile)) 
+            if (fgets(filePath, 1024, configFile))
             {
-                /*
-                * Remove any newline character at the end of filePath...to have a "clean" path
-                */ 
+                //Remove any newline character at the end of filePath to have a "clean" path
                 filePath[strcspn(filePath, "\n")] = 0;
-
-                char fullFilePath[1024]; // Concatenate SHARED_OBJ_NAME and ".csv" to filePath
-                snprintf(fullFilePath, sizeof(fullFilePath), "%s%s.csv", filePath, SHARED_OBJ_NAME);
-                export_file = fopen(fullFilePath, "a");
-
-                if (!export_file) 
-                    perror("Failed to open export file specified in settings.conf");
             } 
             else 
             {
@@ -101,6 +90,15 @@ int create_results_object(const char* name, int* fd, void** ptr)
             perror("Failed to open settings.conf");
         }
     }
+
+    // Generate fullFilePath if filePath is specified via main
+    snprintf(fullFilePath, sizeof(fullFilePath), "%s%s.csv", filePath, SHARED_OBJ_NAME);
+    export_file = fopen(fullFilePath, "a");
+
+    if (!export_file) 
+        perror("Failed to open export file specified in settings.conf or via main");
+
+
 
     return 0;
 }

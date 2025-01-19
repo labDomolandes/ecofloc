@@ -35,7 +35,9 @@
 
 #define SHARED_OBJ_SIZE 4096 // 4KB
 #define SHARED_OBJ_NAME_ROOT "/ECOFLOC_CPU_" 
+
 extern char* SHARED_OBJ_NAME;
+extern char* filePath;
 
 
 /*

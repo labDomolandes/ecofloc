@@ -89,11 +89,11 @@ To compile and install the EcoFloc project on your system, follow these steps:
 
 To use EcoFloc and specify which application to execute, run:
 ```
-./floc --cpu -p or -n [PID or App Name] -i [interval] -t [duration] -d -f 
-./floc --sd -p or -n [PID or App Name] -i [interval] -t [duration] -d -f 
-./floc --nic -p or -n [PID or App Name] -i [interval] -t [duration] -d -f 
-./floc --ram -p or -n [PID or App Name] -t [duration] -d -f 
-./floc --gpu -p or -n [PID or App Name] -t [duration] -d -f 
+./floc --cpu -p or -n [PID or App Name] -i [interval] -t [duration] -d -f [path]
+./floc --sd -p or -n [PID or App Name] -i [interval] -t [duration] -d -f [path]
+./floc --nic -p or -n [PID or App Name] -i [interval] -t [duration] -d -f [path]
+./floc --ram -p or -n [PID or App Name] -t [duration] -d -f [path]
+./floc --gpu -p or -n [PID or App Name] -t [duration] -d -f [path]
 ```
 
 
@@ -104,7 +104,7 @@ To use EcoFloc and specify which application to execute, run:
 To analyze the process with PID 20300 for 10 seconds at an interval of 1000 milliseconds for the CPU, use the following command:
 
 ```bash
-./ecofloc --cpu -p 20300 -i 1000 -t 10 -f
+ecofloc --cpu -p 20300 -i 1000 -t 10 -f /home/user/
 ```
 
 This command will output the results in the console in the following format:
@@ -118,7 +118,8 @@ Total CPU Energy (CPU): 4.72 Joules
 *****************************
 ```
 
-Additionally, the `-f` flag configures EcoFloc to write each interval's analysis to a CSV file specified in the `features.conf` file. In each row, the values are: PID, average power in this interval in Watts, and energy consumed in Joules in this interval.
+Using the `-f` flag, EcoFloc generates a `.csv` file with a name that includes the component and software being analyzed (e.g., `/ECOFLOC_RAM_PID_20300.csv`). The file is stored in the specified path (e.g., `/home/user/`). If you use `default` with the `-f` flag (`ecofloc ... -f default`), EcoFloc will save the file in the path defined in the `features.conf` file located in the project folder. Each row in the `.csv` file includes the following values: PID, average power during the interval (Watts), and energy consumed in the interval (Joules).
+
 
 ### Example 2: Analyze the Chrome Application
 

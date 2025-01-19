@@ -25,6 +25,7 @@ under the License.
 
 int export_to_csv = 0; //Extern variable in results_map.h
 int dynamic_mode = 0; //Extern in comm_energy.h
+char* filePath = NULL; // Extern variable in results_map.h
 
 
 int main(int argc, char **argv)
@@ -34,16 +35,25 @@ int main(int argc, char **argv)
     double interval_ms = 0.0;
     double total_time_s = 0.0;
     export_to_csv = 0;  // Default no export
-
-
-
+    
     int opt;
-    while ((opt = getopt(argc, argv, "p:n:i:t:fd")) != -1)
+    while ((opt = getopt(argc, argv, "p:n:i:t:f:d")) != -1)
     {
         switch (opt)
         {
             case 'f':
                 export_to_csv = 1;  // Set export to CSV flag
+                if (optarg) 
+                {
+                    filePath = (char *)malloc(1024 * sizeof(char));
+                    if (!filePath) 
+                    {
+                        perror("Memory allocation failed for filePath");
+                        exit(EXIT_FAILURE);
+                    }
+                    strncpy(filePath, optarg, 1023); 
+                    filePath[1023] = '\0'; // clean path string  
+                } 
                 break;
             case 'p':
                 pid = atoi(optarg);

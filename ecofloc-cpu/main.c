@@ -23,9 +23,9 @@ under the License.
 #include "comm_energy.h"
 #include "cpu_map.h"
 
-int export_to_csv = 0; //Extern variable in results_map.h
-int dynamic_mode = 0; //Extern in comm_energy.h
-
+int export_to_csv = 0; // Extern variable in results_map.h
+int dynamic_mode = 0; // Extern in comm_energy.h
+char* filePath = NULL; // Extern variable in results_map.h
 
 int main(int argc, char **argv)
 {
@@ -36,12 +36,23 @@ int main(int argc, char **argv)
     export_to_csv = 0;  // Default no export
 
     int opt;
-    while ((opt = getopt(argc, argv, "p:n:i:t:fd")) != -1)
+    while ((opt = getopt(argc, argv, "p:n:i:t:f:d")) != -1)
     {
         switch (opt)
         {
             case 'f':
                 export_to_csv = 1;  // Set export to CSV flag
+                if (optarg) 
+                {
+                    filePath = (char *)malloc(1024 * sizeof(char));
+                    if (!filePath) 
+                    {
+                        perror("Memory allocation failed for filePath");
+                        exit(EXIT_FAILURE);
+                    }
+                    strncpy(filePath, optarg, 1023); 
+                    filePath[1023] = '\0'; // clean path string  
+                } 
                 break;
             case 'p':
                 pid = atoi(optarg);
@@ -72,20 +83,25 @@ int main(int argc, char **argv)
 
     if (pid != 0)
     {
-        init_cpu_features(&features); //Declared as extern in pid_energy.h
-        initialize_results_object(&pid, 1);  //defined in results_map.h
+        init_cpu_features(&features); // Declared as extern in pid_energy.h
+        initialize_results_object(&pid, 1);  // Defined in results_map.h
         pid_energy(pid, (int)interval_ms, (int)total_time_s);
-        print_results(1); //pid
+        print_results(1); // pid
     }
     else if (processName != NULL)
     {
-        init_cpu_features(&features); //Declared as extern in pid_energy.h
-        initialize_results_object(processName, 0);  //defined in results_map.h
+        init_cpu_features(&features); // Declared as extern in pid_energy.h
+        initialize_results_object(processName, 0);  // Defined in results_map.h
         comm_energy(processName, (int)interval_ms, (int)total_time_s);
-        print_results(0); //not pid
+        print_results(0); // not pid
     }
     
     close_results_object();  
+
+    // Free allocated memory for filePath
+    if (filePath) {
+        free(filePath);
+    }
 
     return 0;
 }

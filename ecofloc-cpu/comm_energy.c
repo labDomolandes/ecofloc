@@ -64,16 +64,9 @@ int get_cmd_from_pid(char *pid, char *buffer, size_t buffer_size)
 }
 
 
+
 void *pid_energy_thread(void *arg) 
 {
-    
-    /*
-    * TODO -> Verify this and if this causes problems: 
-    * When a new process is created, It should be analyzed for the remaining global time.
-    * -> unsigned long long timeout_s_local = timeout_s_global - (time(NULL) - global_start_time);
-    * However, app is killed finished when discover_pids finishes
-    */ 
-
     int pid = *((int *)arg);
     free(arg);
 
@@ -81,18 +74,74 @@ void *pid_energy_thread(void *arg)
     active_thread_count++;
     pthread_mutex_unlock(&energy_mutex);
 
-    double energy = pid_energy(pid, interval_ms_global, timeout_s_global);
+    // Calculate remaining execution time for this process
+    unsigned long long elapsed_time = time(NULL) - global_start_time;
+    int timeout_s_local = timeout_s_global - elapsed_time;
+    
+    if (timeout_s_local <= 0) // If no time remains, exit immediately
+    {
+        pthread_mutex_lock(&energy_mutex);
+        active_thread_count--;
+        if (active_thread_count == 0) 
+        {
+            pthread_cond_signal(&cond_var);
+        }
+        pthread_mutex_unlock(&energy_mutex);
+        return NULL;
+    }
+
+    // Run energy measurement for the remaining time
+    double energy = pid_energy(pid, interval_ms_global, timeout_s_local);
 
     pthread_mutex_lock(&energy_mutex);
     total_energy += energy;
     active_thread_count--;
-    if (active_thread_count == 0) {
+    if (active_thread_count == 0) 
+    {
         pthread_cond_signal(&cond_var);
     }
     pthread_mutex_unlock(&energy_mutex);
 
     return NULL;
 }
+
+
+
+
+
+// void *pid_energy_thread(void *arg) 
+// {
+    
+//     /*
+//     * TODO -> Verify this and if this causes problems: 
+//     * When a new process is created, It should be analyzed for the remaining global time.
+//     * -> unsigned long long timeout_s_local = timeout_s_global - (time(NULL) - global_start_time);
+//     * However, app is killed finished when discover_pids finishes
+//     */ 
+
+//     int pid = *((int *)arg);
+//     free(arg);
+
+//     pthread_mutex_lock(&energy_mutex);
+//     active_thread_count++;
+//     pthread_mutex_unlock(&energy_mutex);
+
+//     double energy = pid_energy(pid, interval_ms_global, timeout_s_global);
+
+//     pthread_mutex_lock(&energy_mutex);
+//     total_energy += energy;
+//     active_thread_count--;
+//     if (active_thread_count == 0) 
+//     {
+//         pthread_cond_signal(&cond_var);
+//     }
+//     pthread_mutex_unlock(&energy_mutex);
+
+//     return NULL;
+// }
+
+
+
 
 void launch_energy_threads() 
 {
@@ -176,8 +225,8 @@ void *discover_pids(void *arg)
 
         if(keep_running == 0) //CNTRL + C declared in the pid_energy.h file
           break;
-       if(((time(NULL) - global_start_time) >= timeout_s_global)) //Timeout
-          break;
+       //if(((time(NULL) - global_start_time) >= timeout_s_global)) //Timeout -> Go to the new pid_energy_thread fn
+         // break;
        if (!found_new_pid && active_thread_count == 0 && dynamic_mode==0) //No more pids and no dynamic_mode         
           break;
        

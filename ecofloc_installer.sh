@@ -282,7 +282,7 @@ check_ram()
     local perf_timeout=3000
 
     if ! command -v perf &> /dev/null; then
-        print_status "RAM -> Checking if perf is installed. Please, insall perf package" 0
+        print_status "RAM -> Checking if perf is installed. Please, install perf package" 0
         return 1
     else
         print_status "RAM -> Checking if perf is installed" 1
@@ -306,6 +306,7 @@ check_ram()
         while IFS= read -r line; do
             if [[ "$line" == *"mem-stores"* ]]; then
                 mem_stores=$(echo "$line" | grep -o '[0-9]*')
+                echo $mem_stores
             elif [[ "$line" == *"mem-loads"* ]]; then
                 mem_loads=$(echo "$line" | grep -o '[0-9]*')
             fi

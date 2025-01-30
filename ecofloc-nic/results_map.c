@@ -68,36 +68,51 @@ int create_results_object(const char* name, int* fd, void** ptr)
 
     memset(*ptr, 0, SHARED_OBJ_SIZE);
 
-    char fullFilePath[1024]; // Concatenate SHARED_OBJ_NAME and ".csv" to filePath
-    if ((export_to_csv == 1) && (strcmp(filePath, "default") == 0)) // If the path was not specified via main
+   
+
+    if (export_to_csv == 1) 
     {
-        FILE *configFile = fopen(CONFIG_PATH, "r");
-        if (configFile) 
+        char fullFilePath[1024]; // Concatenate SHARED_OBJ_NAME and ".csv" to filePath
+
+        if (strcmp(filePath, "default") == 0) // If the full path was not specified via main
         {
-            if (fgets(filePath, 1024, configFile))
+            FILE *configFile = fopen(CONFIG_PATH, "r");
+            if (configFile) 
             {
-                //Remove any newline character at the end of filePath to have a "clean" path
-                filePath[strcspn(filePath, "\n")] = 0;
+                if (fgets(filePath, 1024, configFile))
+                {
+                    filePath[strcspn(filePath, "\n")] = 0; // Clean path
+                } 
+                else 
+                {
+                    fprintf(stderr, "Failed to read the first line from settings.conf\n");
+                    fclose(configFile);
+                    return -1; // Prevent further execution
+                }
+                fclose(configFile);
             } 
             else 
             {
-                fprintf(stderr, "Failed to read the first line from settings.conf\n");
+                perror("Failed to open settings.conf");
+                return -1; // Prevent further execution
             }
-            fclose(configFile);
-        } 
-        else 
-        {
-            perror("Failed to open settings.conf");
         }
+
+        if (strlen(filePath) == 0) // Additional safety check
+        {
+            fprintf(stderr, "Error: filePath is empty.\n");
+            return -1;
+        }
+
+        snprintf(fullFilePath, sizeof(fullFilePath), "%s%s.csv", filePath, SHARED_OBJ_NAME);
+        export_file = fopen(fullFilePath, "a");
+
+        if (!export_file) 
+            perror("Failed to open export file specified in settings.conf or via main");
     }
 
-    // Generate fullFilePath if filePath is specified via main
-    snprintf(fullFilePath, sizeof(fullFilePath), "%s%s.csv", filePath, SHARED_OBJ_NAME);
-    export_file = fopen(fullFilePath, "a");
 
-    if (!export_file) 
-        perror("Failed to open export file specified in settings.conf or via main");
-
+   
 
 
     return 0;
@@ -150,7 +165,11 @@ void initialize_results_object(void *identifier, int is_pid)
 }
 
 
-void write_results(int pid, int timestamp, double power, double energy)
+
+
+
+
+void write_results(int pid, int timestamp, double power, double energy,int iterations)
 {
 
     pthread_mutex_lock(&pid_mutex);
@@ -173,7 +192,9 @@ void write_results(int pid, int timestamp, double power, double energy)
         *In case of considering the real elapsed time instead of the measurements quantity
         * global_results->average_power = global_results->total_energy / global_results->elapsed_time;
         */  
-        global_results->average_power = global_results->total_energy / global_results->count;
+       // global_results->average_power = global_results->total_energy / global_results->count;
+
+         global_results->average_power = global_results->total_energy / iterations;
     }
 
     if (export_to_csv) 
@@ -189,7 +210,7 @@ void write_results(int pid, int timestamp, double power, double energy)
         fflush(export_file);
     }  
 
-    //printf("%f %d %f\n", global_results->total_energy, global_results->count, global_results->elapsed_time);
+    //printf("%d %f %f %d\n", pid, global_results->total_energy, global_results->average_power, iterations);
 
 
     pthread_mutex_unlock(&pid_mutex);

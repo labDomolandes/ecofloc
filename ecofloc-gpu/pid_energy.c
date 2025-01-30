@@ -88,10 +88,23 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
 
     signal(SIGINT, handle_sigint);
 
+    //All to milliseconds to get the iterations to perform
+    int total_iterations = (int)(timeout_s * 1000.0 / interval_ms);
+
     //68 years :)
     if (timeout_s < 0) timeout_s = INT_MAX;
 
-    while (keep_running && (time(NULL) - start_time) <= timeout_s)
+    /*
+    * PATCH: Instead of stopping the loop based on timeout expiration, EcoFloc now iterates 
+    * based on the computed number of iterations. 
+    * This approach prevents inconsistencies when handling multiple PIDs. 
+    * Example: If processing all PIDs in an iteration takes longer than the specified interval, 
+    * relying solely on elapsed time could cause an early exit before completing the intended cycles.
+    */
+
+    //while (keep_running && (time(NULL) - start_time) <= timeout_s)
+    int iteration=1;
+    while (keep_running && iteration <= total_iterations)
     {
         pthread_mutex_lock(&fn_mutex); // Protect time values retrieval 
         float initial_power = gpu_power();
@@ -114,9 +127,11 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
         double interval_energy = avg_interval_power * interval_s;
 
         // Write results
-        write_results(pid, time(NULL) - start_time, avg_interval_power, interval_energy);
+        write_results(pid, time(NULL) - start_time, avg_interval_power,interval_energy, iteration);
 
         total_energy += interval_energy;
+
+        iteration++;
     }
 
     return total_energy; // Total energy in Joules

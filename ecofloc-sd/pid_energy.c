@@ -46,10 +46,23 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
     time_t start_time;
     start_time = time(NULL);
 
+    //All to milliseconds to get the iterations to perform
+    int total_iterations = (int)(timeout_s * 1000.0 / interval_ms);
+
      //68 years :)
     if (timeout_s < 0) timeout_s = INT_MAX;
 
-    while (keep_running && (time(NULL) - start_time) <= timeout_s) 
+    /*
+    * PATCH: Instead of stopping the loop based on timeout expiration, EcoFloc now iterates 
+    * based on the computed number of iterations. 
+    * This approach prevents inconsistencies when handling multiple PIDs. 
+    * Example: If processing all PIDs in an iteration takes longer than the specified interval, 
+    * relying solely on elapsed time could cause an early exit before completing the intended cycles.
+    */
+
+    //while (keep_running && (time(NULL) - start_time) <= timeout_s)
+    int iteration=1;
+    while (keep_running && iteration <= total_iterations)
     {
         struct timespec interval = {interval_ms / 1000, (interval_ms % 1000) * 1000000};
         nanosleep(&interval, NULL);
@@ -80,12 +93,14 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
 
         double interval_energy = avg_interval_power * interval_seconds; // Energy in joules for the interval
 
-        write_results(pid, time(NULL) - start_time, avg_interval_power,interval_energy);
+        write_results(pid, time(NULL) - start_time, avg_interval_power,interval_energy, iteration);
 
         total_energy += interval_energy;
 
         initial_read_bytes = final_read_bytes;
         initial_written_bytes = final_written_bytes;
+
+        iteration++;
     }
 
     return total_energy;

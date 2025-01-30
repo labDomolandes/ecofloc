@@ -172,6 +172,12 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
     //double total_power = 0.0;
     double avg_cpu_power = 0.0;
     //int iterations = 0;
+ 
+
+    //All to milliseconds to get the iterations to perform
+    int total_iterations = (int)(timeout_s * 1000.0 / interval_ms);
+
+
 
     // Convert the interval in milliseconds to a timespec struct for nanosleep
     struct timespec interval_time;
@@ -183,7 +189,17 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
     unsigned long long start_time = time(NULL);
 
 
-    while (keep_running && (time(NULL) - start_time) <= timeout_s)
+    /*
+    * PATCH: Instead of stopping the loop based on timeout expiration, EcoFloc now iterates 
+    * based on the computed number of iterations. 
+    * This approach prevents inconsistencies when handling multiple PIDs. 
+    * Example: If processing all PIDs in an iteration takes longer than the specified interval, 
+    * relying solely on elapsed time could cause an early exit before completing the intended cycles.
+    */
+
+    //while (keep_running && (time(NULL) - start_time) <= timeout_s)
+    int iteration=1;
+    while (keep_running && iteration <= total_iterations)
     {
         //Power variables and time calculations 
         map_frequencies(map);
@@ -236,13 +252,21 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
         pthread_mutex_unlock(&fn_mutex);
 
         
-        write_results(pid, time(NULL) - start_time, avg_interval_power,interval_energy);
+        write_results(pid, time(NULL) - start_time, avg_interval_power,interval_energy, iteration);
         //print_results();
 
         total_energy += interval_energy; //TODO-> cummulation in map
 
         start_pid_time = end_pid_time;
         start_total_time = end_total_time;
+
+        iteration++;
+
+
+
+
+    //printf("%d %d %d %f %f\n", pid, iteration, total_iterations, avg_interval_power,interval_energy );
+
 
 
     }

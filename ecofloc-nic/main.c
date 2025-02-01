@@ -31,17 +31,19 @@ int main(int argc, char **argv)
 {
     int pid = 0;
     char *processName = NULL;
+    char *launchCommandPID = NULL;
+    char *launchCommandName = NULL;
     double interval_ms = 0.0;
     double total_time_s = 0.0;
-    export_to_csv = 0;  // Default no export
+    int verbose = 0;
 
     int opt;
-    while ((opt = getopt(argc, argv, "p:n:i:t:f:d")) != -1)
+    while ((opt = getopt(argc, argv, "p:n:i:t:f:l:L:dv")) != -1)
     {
         switch (opt)
         {
             case 'f':
-                export_to_csv = 1;  // Set export to CSV flag
+                export_to_csv = 1;
                 if (optarg) 
                 {
                     filePath = (char *)malloc(1024 * sizeof(char));
@@ -51,7 +53,7 @@ int main(int argc, char **argv)
                         exit(EXIT_FAILURE);
                     }
                     strncpy(filePath, optarg, 1023); 
-                    filePath[1023] = '\0'; // clean path string  
+                    filePath[1023] = '\0';  
                 } 
                 break;
             case 'p':
@@ -66,37 +68,128 @@ int main(int argc, char **argv)
             case 't':
                 total_time_s = atof(optarg);
                 break;
-            case 'd':
-                dynamic_mode = 1;  // Set dynamic mode flag
+            case 'l':
+                launchCommandPID = optarg;  
                 break;
-            default: /* '?' */
-                fprintf(stderr, "Usage: %s [-p PID] [-n ProcessName] -i INTERVAL_MS -t TOTAL_TIME_S [-f] [-d]\n", argv[0]);
+            case 'L':
+                launchCommandName = optarg; 
+                break;
+            case 'd':
+                dynamic_mode = 1;  
+                break;
+            case 'v':
+                verbose = 1;  
+                break;
+            default:
+                fprintf(stderr, "Usage: %s [-p PID] [-n ProcessName] [-l Command] [-L Command] -i INTERVAL_MS -t TOTAL_TIME_S [-f] [-d] [-v]\n", argv[0]);
                 exit(EXIT_FAILURE);
         }
     }
 
-    if ((pid == 0 && processName == NULL) || interval_ms == 0.0 || total_time_s == 0.0)
+    int tracking_options = (pid != 0) + (processName != NULL) + (launchCommandPID != NULL) + (launchCommandName != NULL);
+
+    if (tracking_options != 1)
     {
-        fprintf(stderr, "Usage: %s [-p PID] [-n ProcessName] -i INTERVAL_MS -t TOTAL_TIME_S [-f] [-d]\n", argv[0]);
+        fprintf(stderr, "Error: You must specify exactly one of -p, -n, -l, or -L\n");
         exit(EXIT_FAILURE);
     }
 
-    if (pid != 0)
+    if (launchCommandPID != NULL && launchCommandName != NULL)
     {
-        init_nic_features(&features); //Declared as extern in pid_energy.h
-        initialize_results_object(&pid, 1);  //defined in results_map.h
-        pid_energy(pid, (int)interval_ms, (int)total_time_s);
-        print_results(1); //pid
-    }
-    else if (processName != NULL)
-    {
-        init_nic_features(&features); //Declared as extern in pid_energy.h
-        initialize_results_object(processName, 0);  //defined in results_map.h
-        comm_energy(processName, (int)interval_ms, (int)total_time_s);
-        print_results(0); //not pid
+        fprintf(stderr, "Error: -l and -L cannot be used together.\n");
+        exit(EXIT_FAILURE);
     }
 
-    close_results_object();  
+    // Case: -l command -> Launch and analyze by PID
+    if (launchCommandPID != NULL)
+    {
+        //  Duplicate the process
+        pid_t child_pid = fork();
+        
+          // If I am the child process
+        if (child_pid == 0)  
+        {
+            setsid();
+            if (!verbose)
+                freopen("/dev/null", "w", stderr); 
+            
+            char *args[] = {launchCommandPID, NULL};
+             //...I execute the command and it replace me
+            execvp(launchCommandPID, args);
+
+            perror("Error launching command");
+            exit(EXIT_FAILURE);
+        }
+        // If I am the parent process, I analyze the energy consumption.
+        else if (child_pid > 0)  
+        {
+            int pid_copy = child_pid;  
+            init_nic_features(&features);
+            initialize_results_object(&pid_copy, 1);
+            pid_energy(child_pid, (int)interval_ms, (int)total_time_s);
+            print_results(1);
+        }
+        else
+        {
+            perror("Fork failed");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Case: -L command -> Launch and analyze by process name
+    else if (launchCommandName != NULL)
+    {
+        pid_t child_pid = fork();
+
+        if (child_pid == 0)  
+        {
+            setsid();
+            if (!verbose)
+                freopen("/dev/null", "w", stderr);
+            
+            char *args[] = {launchCommandName, NULL};
+            execvp(launchCommandName, args);
+
+            perror("Error launching command");
+            exit(EXIT_FAILURE);
+        }
+        else if (child_pid > 0)  
+        {
+            init_nic_features(&features);
+            initialize_results_object(launchCommandName, 0);
+            comm_energy(launchCommandName, (int)interval_ms, (int)total_time_s);
+            print_results(0);
+        }
+        else
+        {
+            perror("Fork failed");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Case: -p PID -> Analyze an existing PID
+    else if (pid != 0)
+    {
+        init_nic_features(&features);
+        initialize_results_object(&pid, 1);
+        pid_energy(pid, (int)interval_ms, (int)total_time_s);
+        print_results(1);
+    }
+
+    // Case: -n processName -> Analyze an existing process by name
+    else if (processName != NULL)
+    {
+        init_nic_features(&features);
+        initialize_results_object(processName, 0);
+        comm_energy(processName, (int)interval_ms, (int)total_time_s);
+        print_results(0);
+    }
+    
+    close_results_object();
+
+    if (filePath) {
+        free(filePath);
+    }
 
     return 0;
 }

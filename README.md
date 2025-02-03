@@ -156,8 +156,8 @@ Then, specify the measuring interval and total analysis time:
 ### **Extra Parameters**  
 
 8. **Dynamic Mode (`-d`)** – Allows **EcoFloc** to track applications that may be closed and reopened during analysis.  
-6. **Export Mode (`-f`)** – Saves measurement results to a CSV file at the specified path. If set to **default**, **EcoFloc** will use the path defined in `settings.conf` inside each component folder. The file includes, for each interval: measurement time, PID, average power, and energy consumed.  
-
+9. **Export Mode (`-f`)** – Saves measurement results to a CSV file at the specified path. If set to **default**, **EcoFloc** will use the path defined in `settings.conf` inside each component folder. The file includes, for each interval: measurement time, PID, average power, and energy consumed.  
+10. **Verbose Mode (`-v`)** – Shows warnings, especially when `-l` or `-L` is used.  
 
 
 ### Execution Commands  
@@ -165,11 +165,11 @@ Then, specify the measuring interval and total analysis time:
 Run **EcoFloc** using the following format:  
 
 ```bash  
-ecofloc --cpu -p or -n [PID or App Name] or -l or -L [App Name] -i [interval] -t [duration] -d -f [path]  
-ecofloc --sd -p or -n [PID or App Name] or -l or -L [App Name] -i [interval] -t [duration] -d -f [path]  
-ecofloc --nic -p or -n [PID or App Name] or -l or -L [App Name] -i [interval] -t [duration] -d -f [path]  
-ecofloc --ram -p or -n [PID or App Name] or -l or -L [App Name] -i [interval] -t [duration] -d -f [path]  
-ecofloc --gpu -p or -n [PID or App Name] or -l or -L [App Name] -i [interval] -t [duration] -d -f [path]  
+ecofloc --cpu -p or -n [PID or App Name] or -l or -L [App Name] -i [interval] -t [duration] -d -v -f [path]  
+ecofloc --sd -p or -n [PID or App Name] or -l or -L [App Name] -i [interval] -t [duration] -d -v -f [path]  
+ecofloc --nic -p or -n [PID or App Name] or -l or -L [App Name] -i [interval] -t [duration] -d -v -f [path]  
+ecofloc --ram -p or -n [PID or App Name] or -l or -L [App Name] -i [interval] -t [duration] -d -v -f [path]  
+ecofloc --gpu -p or -n [PID or App Name] or -l or -L [App Name] -i [interval] -t [duration] -d -v -f [path]  
 ```  
 
 

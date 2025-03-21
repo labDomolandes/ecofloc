@@ -183,5 +183,5 @@ register_power_plotter_callbacks(app)
 # energy_plotter.register_energy_plotter_callbacks()
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run(debug=True)
 

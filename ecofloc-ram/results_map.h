@@ -75,7 +75,7 @@ int create_results_object(const char* name, int* fd, void** ptr);
 */
 void initialize_results_object(void *identifier, int is_pid);
 void write_results(int pid, int timestamp, double power,  double energy, int iterations);
-void print_results();
+void print_results(int is_pid);
 void close_results_object();
 
 #endif // RESULTS_MAP_H

@@ -1,4 +1,4 @@
-# <img src="https://github.com/hhumbertoAv/FLOC/assets/6061953/39adf1cb-08eb-4d51-a1fe-5fd26966350e" width="40"/> EcoFloc: Energy Measuring System Tool for Linux
+# <img src="gui/assets/images/ecofloc.png" width="70"/> EcoFloc: Energy Measuring System Tool for Linux
 
 
 
@@ -6,14 +6,16 @@
 
 ## Acknowledgments
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/ce919194-b05e-48d3-a75c-90806b022335" width="45%"/>
-</p>
+
 
 
 **EcoFloc** was developed by the R&D laboratory of **Technopôle Domolandes**[^1], with support from **Université de Pau et des Pays de l'Adour** and **Université de Toulouse**. These institutions play a key role in advancing research and innovation, contributing to technological progress and regional development in France.  
 
-
+<p align="center">
+  <img src="gui/assets/images/domolandes.png" width= "20%" />   
+  <img src="gui/assets/images/uppa.png" width="18%" >
+  <img src="gui/assets/images/capitole.jpg" width= "18%" />
+</p>
 
 
 
@@ -241,7 +243,7 @@ Total GPU Energy (GPU): 39.6 Joules
 
 
 ## <img src="https://github.com/user-attachments/assets/fe776c79-98c7-4741-89b6-047a4868bf5c" width="40"/> References
-[^1]: [Têchnopole Domolandes](https://www.domolandes.fr
+[^1]: [Technopole Domolandes](https://www.domolandes.fr)
 [^2]: Running Average Power Limit (RAPL): [Intel® 64 and IA-32 Architectures Software Developer's Manual](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html), specifically in the section detailing power and thermal management.
 [^3]: Humberto, A.V.H.: An energy-saving perspective for distributed environments:
 Deployment, scheduling and simulation with multidimensional entities for Software and Hardware. Ph.D. thesis, UPPA, https://www.theses.fr/s342134 (2022)

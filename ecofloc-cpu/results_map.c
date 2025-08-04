@@ -169,14 +169,14 @@ void initialize_results_object(void *identifier, int is_pid)
 
 
 
-void write_results(int pid, int timestamp, double power, double energy,int iterations)
+void write_results(int pid, int timestamp, double power, double energy,int iterations, int interval_ms)
 {
 
     pthread_mutex_lock(&pid_mutex);
 
     if (global_results == NULL)
     {
-        perror("PID data pointer is null");
+        perror("The data pointer is null");
         pthread_mutex_unlock(&pid_mutex);
         return;
     }
@@ -194,7 +194,8 @@ void write_results(int pid, int timestamp, double power, double energy,int itera
         */  
        // global_results->average_power = global_results->total_energy / global_results->count;
 
-         global_results->average_power = global_results->total_energy / iterations;
+        double total_time_sec = (iterations * interval_ms) / 1000.0;
+        global_results->average_power = global_results->total_energy / total_time_sec;
     }
 
     if (export_to_csv) 

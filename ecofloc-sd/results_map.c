@@ -167,37 +167,36 @@ void initialize_results_object(void *identifier, int is_pid)
 
 
 
-
-
-void write_results(int pid, int timestamp, double power, double energy,int iterations)
+void write_results(int pid, int timestamp, double power, double energy,int iterations, int interval_ms)
 {
 
     pthread_mutex_lock(&pid_mutex);
 
     if (global_results == NULL)
     {
-        perror("PID data pointer is null");
+        perror("The data pointer is null");
         pthread_mutex_unlock(&pid_mutex);
         return;
     }
-    
+
     global_results->elapsed_time = timestamp;
     global_results->total_energy += energy;
     global_results->count++;  // Tracking the accesses number
-    
 
-    if (global_results->elapsed_time > 0) 
+
+    if (global_results->elapsed_time > 0)
     {
         /*
         *In case of considering the real elapsed time instead of the measurements quantity
         * global_results->average_power = global_results->total_energy / global_results->elapsed_time;
-        */  
+        */
        // global_results->average_power = global_results->total_energy / global_results->count;
 
-         global_results->average_power = global_results->total_energy / iterations;
+        double total_time_sec = (iterations * interval_ms) / 1000.0;
+        global_results->average_power = global_results->total_energy / total_time_sec;
     }
 
-    if (export_to_csv) 
+    if (export_to_csv)
     {
         time_t now;
         struct tm *local;
@@ -208,7 +207,7 @@ void write_results(int pid, int timestamp, double power, double energy,int itera
 
         fprintf(export_file, "%s,%d,%.2f,%.2f\n", time_str, pid, power, energy);
         fflush(export_file);
-    }  
+    }
 
     //printf("%d %f %f %d\n", pid, global_results->total_energy, global_results->average_power, iterations);
 

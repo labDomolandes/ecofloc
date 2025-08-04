@@ -108,7 +108,7 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
             double interval_seconds = (double) interval_ms / 1000.0;
             double interval_energy = avg_interval_power * interval_seconds; // Energy in joules for the interval
 
-            write_results(pid, time(NULL) - start_time, avg_interval_power,interval_energy, iteration);
+            write_results(pid, time(NULL) - start_time, avg_interval_power,interval_energy, iteration, interval_ms);
 
             total_energy += interval_energy; // Total energy in joules
         }

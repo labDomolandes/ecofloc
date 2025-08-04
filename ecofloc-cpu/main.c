@@ -21,16 +21,15 @@ under the License.
 #include <sys/wait.h>
 #include <unistd.h>
 
-
 #include "results_map.h"
 #include "pid_energy.h"
+#include "system_energy.h"
 #include "comm_energy.h"
 #include "cpu_map.h"
 
 int export_to_csv = 0; // Extern variable in results_map.h
 int dynamic_mode = 0; // Extern in comm_energy.h
 char* filePath = NULL; // Extern variable in results_map.h
-
 
 int main(int argc, char **argv)
 {
@@ -41,10 +40,12 @@ int main(int argc, char **argv)
     double interval_ms = 0.0;
     double total_time_s = 0.0;
     int verbose = 0;
+    int system_mode = 0;
+
     export_to_csv = 0;  // Default no export
 
     int opt;
-    while ((opt = getopt(argc, argv, "p:n:i:t:f:l:L:dv")) != -1)
+    while ((opt = getopt(argc, argv, "p:n:i:t:f:l:L:Sdv")) != -1)
     {
         switch (opt)
         {
@@ -80,6 +81,9 @@ int main(int argc, char **argv)
             case 'L':
                 launchCommandName = optarg; 
                 break;
+            case 'S':
+                system_mode = 1;
+                break;
             case 'd':
                 dynamic_mode = 1;  
                 break;
@@ -87,34 +91,43 @@ int main(int argc, char **argv)
                 verbose = 1;  
                 break;
             default:
-                fprintf(stderr, "Usage: %s [-p PID] [-n ProcessName] [-l Command] [-L Command] -i INTERVAL_MS -t TOTAL_TIME_S [-f] [-d] [-v]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-p PID] [-n ProcessName] [-l Command] [-L Command] -i INTERVAL_MS -t TOTAL_TIME_S [-S] [-f] [-d] [-v]\n", argv[0]);
                 exit(EXIT_FAILURE);
         }
     }
 
-    // Only one option allowed
-    int tracking_options = (pid != 0) + (processName != NULL) + (launchCommandPID != NULL) + (launchCommandName != NULL);
+    // Count tracking options
+    int tracking_options = (pid != 0) + (processName != NULL) + 
+                           (launchCommandPID != NULL) + (launchCommandName != NULL) + 
+                           (system_mode != 0);
 
     if (tracking_options != 1)
     {
-        fprintf(stderr, "Error: You must specify exactly one of -p, -n, -l, or -L\n");
+        fprintf(stderr, "Error: You must specify exactly one of -p, -n, -l, -L, or -S\n");
         exit(EXIT_FAILURE);
     }
 
-    // Only -l OR -L can be used 
     if (launchCommandPID != NULL && launchCommandName != NULL)
     {
         fprintf(stderr, "Error: -l and -L cannot be used together.\n");
         exit(EXIT_FAILURE);
     }
 
-    // Case: -l command -> Launch and analyze by PID
-    if (launchCommandPID != NULL)
+    // Case: -S -> System-wide analysis
+    if (system_mode)
     {
-        //  Duplicate the process
+        char *sys = "System_wide";
+        init_cpu_features(&cpu_specs);
+        initialize_results_object(sys, 0); 
+        system_energy((int)interval_ms, (int)total_time_s);
+        print_results(0);
+    }
+
+    // Case: -l command -> Launch and analyze by PID
+    else if (launchCommandPID != NULL)
+    {
         pid_t child_pid = fork();
 
-        // If I am the child process
         if (child_pid == 0)  
         {
             setsid();
@@ -122,22 +135,16 @@ int main(int argc, char **argv)
                 freopen("/dev/null", "w", stderr); 
             
             char *args[] = {launchCommandPID, NULL};
-            //...I execute the command and it replace me
             execvp(launchCommandPID, args);
 
             perror("Error launching command");
             exit(EXIT_FAILURE);
         }
-
-        // If I am the parent process, I analyze the energy consumption. 
         else if (child_pid > 0)  
         {
-            //sleep(1);
             init_cpu_features(&features);
-
-            int pid_copy = child_pid;  // Ensure proper pointer passing
+            int pid_copy = child_pid;
             initialize_results_object(&pid_copy, 1);
-
             pid_energy(child_pid, (int)interval_ms, (int)total_time_s);
             print_results(1);
         }
@@ -167,7 +174,6 @@ int main(int argc, char **argv)
         }
         else if (child_pid > 0)  
         {
-            //sleep(1);
             init_cpu_features(&features);
             initialize_results_object(launchCommandName, 0);
             comm_energy(launchCommandName, (int)interval_ms, (int)total_time_s);
@@ -197,10 +203,11 @@ int main(int argc, char **argv)
         comm_energy(processName, (int)interval_ms, (int)total_time_s);
         print_results(0);
     }
-    
+
     close_results_object();
 
-    if (filePath) {
+    if (filePath) 
+    {
         free(filePath);
     }
 

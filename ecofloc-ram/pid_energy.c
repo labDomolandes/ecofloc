@@ -165,7 +165,7 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
         }
 
         // Write results
-        write_results(pid, time(NULL) - start_time, avg_interval_power,interval_energy, iteration);
+        write_results(pid, time(NULL) - start_time, avg_interval_power,interval_energy, iteration,interval_ms);
 
         total_energy += interval_energy;
 

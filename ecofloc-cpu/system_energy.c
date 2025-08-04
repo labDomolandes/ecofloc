@@ -18,8 +18,7 @@
  * under the License.
  */
 
-
-/*
+ /*
 * EQUATION W=P*C*V*V*F
 * 1) P=Percentage of time that the CPU gives to the process and its threads
 * 2) C=Capacitance
@@ -28,11 +27,11 @@
 */
 
 
-#include "pid_energy.h"
+#include "system_energy.h"
 #include "results_map.h"
 
 
-cpu_features features;
+cpu_features cpu_specs;
 
 
 static pthread_mutex_t fn_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -87,86 +86,103 @@ static pthread_mutex_t fn_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 
-double get_capacitance() 
+double capacitance() 
 {
-    double cpu_capacitance = (0.7 * features.cpu_tdp) / 
-                             (features.cpu_freq_tdp * 
-                              features.cpu_voltage_tdp * 
-                              features.cpu_voltage_tdp);
+    double cpu_capacitance = (0.7 * cpu_specs.cpu_tdp) / 
+                             (cpu_specs.cpu_freq_tdp * 
+                              cpu_specs.cpu_voltage_tdp * 
+                              cpu_specs.cpu_voltage_tdp);
 
     return cpu_capacitance; 
 }
 
 
 
-
-double current_power(cpu_map *map)
+double system_power(cpu_map *map)
 {
-
-
     float total_power = 0.0;
-    float capacitance= get_capacitance(); //TODO:  Make capacitance global to calculate it only once
-    
-    // To avoid segmentation faults due to processor and core id mismatching in cpuinfo file.
-    int allocation_size = (map->TOTAL_VCORES > map->MAX_CORE_ID + 1) ? map->TOTAL_VCORES : (map->MAX_CORE_ID + 1);
+    float cap = capacitance(); // TODO: Make capacitance global
+    //printf("DEBUG: Capacitance used = %.9f\n", cap);
 
-    // map to cumulate the power of each real core
+    /*
+     * Compute allocation size for internal arrays.
+     * MAX_CORE_ID may be greater than TOTAL_VCORES due to how Linux assigns core ids.
+     * To avoid out-of-bound errors or segmentation faults,
+     * we take the larger of the two.
+     */
+    int allocation_size = (map->TOTAL_VCORES > map->MAX_CORE_ID + 1) 
+                          ? map->TOTAL_VCORES 
+                          : (map->MAX_CORE_ID + 1);
+
     float *real_core_power = calloc(allocation_size, sizeof(float));
-    // number of vCores sharing each real core. For all cases I know, that is 2 (hyperthreading),
-    // but...one never knows :)
     int *real_core_count = calloc(allocation_size, sizeof(int));
 
+     /*
+     * Loop over each virtual core and compute its individual dynamic power:
+     * Power = C * V^2 * f
+     * Then, group this power by physical core to later compute average per core.
+     */
     for (int i = 0; i < map->TOTAL_VCORES; i++)
     {
-        if (map->PID_VCORES[i] == 1) //if vCORE is used
-        {
-            int real_core = map->REAL_CORES[i];
-            float power = capacitance * map->VCORE_VOLT[i] * map->VCORE_VOLT[i] * map->VCORE_FREQ[i];
-            real_core_power[real_core] += power;
-            real_core_count[real_core]++;
-        }
+        int real_core = map->REAL_CORES[i];
+        float power = cap * map->VCORE_VOLT[i] * map->VCORE_VOLT[i] * map->VCORE_FREQ[i];
+
+
+         // Per-vCore debug
+        float freq = map->VCORE_FREQ[i];
+        float volt = map->VCORE_VOLT[i];
+        //printf("DEBUG: vCore %d -> Real Core %d | Freq: %.2f MHz | Volt: %.5f V | Power: %.9f\n",
+        //       i, real_core, freq, volt, power);
+
+
+        real_core_power[real_core] += power;
+        real_core_count[real_core]++;
     }
 
-    for (int i = 0; i < map->TOTAL_VCORES; i++)
+    /*
+     * Now compute total system power:
+     * For each real core used, divide total power by number of vCores sharing it.
+     * This gives the average power per physical core.
+     * Then sum all real core contributions to get final system-level power.
+     */
+    for (int i = 0; i < allocation_size; i++)
     {
         if (real_core_count[i] > 0)
         {
-            // Average the power for vCores sharing the same real core
-            total_power += real_core_power[i] / real_core_count[i];
+            float avg_power = real_core_power[i] / real_core_count[i];
+            total_power += avg_power;
+
+            //  printf("DEBUG: REAL_CORE[%d] -> Avg Power: %.9f (from %d vCores)\n",
+            //        i, avg_power, real_core_count[i]);
+
+            //  printf("DEBUG TOTAL Power: %.9f\n", total_power);
+
         }
     }
-
-    //printf("Total CPU Power: %.2f\n", total_power);
 
     free(real_core_power);
     free(real_core_count);
 
     return total_power;
-
 }
 
-volatile sig_atomic_t keep_running = 1; 
-void handle_sigint(int sig) 
+
+volatile sig_atomic_t stay_running = 1; 
+void handle_signal(int sig) 
 {
-    keep_running = 0;
+    stay_running = 0;
 }
 
-double pid_energy(int pid, int interval_ms, int timeout_s)
+double system_energy(int interval_ms, int timeout_s)
 {
-
 
     cpu_map *map = malloc(sizeof(cpu_map));
-
-    int map_pid_error = 0;
 
     init_maps(map);
     map_cores(map);
 
     //68 years :)
     if (timeout_s < 0) timeout_s = INT_MAX;
-
-    unsigned long long start_pid_time = pid_cpu_time(pid);
-    unsigned long long start_total_time = total_cpu_time();
     
     double total_energy = 0.0;
     //double total_power = 0.0;
@@ -178,13 +194,12 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
     int total_iterations = (int)(timeout_s * 1000.0 / interval_ms);
 
 
-
     // Convert the interval in milliseconds to a timespec struct for nanosleep
     struct timespec interval_time;
     interval_time.tv_sec = interval_ms / 1000;
     interval_time.tv_nsec = (interval_ms % 1000) * 1000000;
 
-    signal(SIGINT, handle_sigint);
+    signal(SIGINT, handle_signal);
 
     unsigned long long start_time = time(NULL);
 
@@ -192,140 +207,65 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
     /*
     * PATCH: Instead of stopping the loop based on timeout expiration, EcoFloc now iterates 
     * based on the computed number of iterations. 
-    * This approach prevents inconsistencies when handling multiple PIDs. 
-    * Example: If processing all PIDs in an iteration takes longer than the specified interval, 
+    * This approach prevents inconsistencies when iteration duration varies. 
+    * Example: If each iteration takes longer than the specified interval, 
     * relying solely on elapsed time could cause an early exit before completing the intended cycles.
     */
 
+
     //while (keep_running && (time(NULL) - start_time) <= timeout_s)
     int iteration=1;
-    while (keep_running && iteration <= total_iterations)
+    while (stay_running && iteration <= total_iterations)
     {
         //Power variables and time calculations 
         map_frequencies(map);
         map_voltages(map);
-                 
-        double power_start = current_power(map);
-
-        // Wait to calculate the pid cpu time
+         
+        
+        double power_start = system_power(map);
+        
+        // Wait to calculate the cpu time
         nanosleep(&interval_time, NULL);
 
         map_frequencies(map);
         map_voltages(map);
-        if(map_pid(map,pid)){break;}//IF PID does not exist
-        double power_end = current_power(map);
+
+        double power_end = system_power(map);
 
 
-        //PID power and energy calculation 
+        //System power and energy calculation 
 
         double avg_power_interval = (power_start + power_end) / 2.0;
 
         pthread_mutex_lock(&fn_mutex); // Protect time values retrieval 
 
-        unsigned long long end_pid_time = pid_cpu_time(pid);
         unsigned long long end_total_time = total_cpu_time();
 
         pthread_mutex_unlock(&fn_mutex);
 
-
-        double pid_time_diff = end_pid_time - start_pid_time;
-        double total_time_diff = end_total_time - start_total_time;
-        
-        // Calculate CPU usage for the interval
-        if (pid_time_diff > total_time_diff) 
-        {
-            fprintf(stderr, "Anomaly detected: PID time difference > total time difference.\n");
-            continue;
-        }
-        double cpu_usage = (pid_time_diff / total_time_diff);
         
         // Calculate the energy consumed during the interval in Joules (watts x sec)
         double interval_sec = interval_ms / 1000.0; // -> to secs
 
         pthread_mutex_lock(&fn_mutex); // Protect time values retrieval 
 
-        double interval_energy = avg_power_interval * cpu_usage * interval_sec;
-        double avg_interval_power = avg_power_interval * cpu_usage;
+        double interval_energy = avg_power_interval * interval_sec;
 
         pthread_mutex_unlock(&fn_mutex);
 
-        
-        write_results(pid, time(NULL) - start_time, avg_interval_power,interval_energy, iteration, interval_ms);
-        //print_results();
+        //We fixed "-333" as the system identifier in the results file. 
+        int pid_for_system=-333;
 
+        write_results(pid_for_system, time(NULL) - start_time, avg_power_interval, interval_energy, iteration, interval_ms);
+        
         total_energy += interval_energy; //TODO-> cummulation in map
 
-        start_pid_time = end_pid_time;
-        start_total_time = end_total_time;
-
         iteration++;
-
-
-
-
-    //printf("%d %d %d %f %f\n", pid, iteration, total_iterations, avg_interval_power,interval_energy );
-
-
-
     }
     
    
 
     return total_energy;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

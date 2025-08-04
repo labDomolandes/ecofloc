@@ -135,7 +135,10 @@ void map_frequencies(cpu_map* map)
         }
 
         if (fscanf(freq_file, "%f", &frequency_kHz) == 1)
+        {
+            //printf("DEBUG: vCore %d raw freq = %.0f kHz\n", i, frequency_kHz);
             map->VCORE_FREQ[i] = frequency_kHz / 1000.0;  // To MHz ... TODO -> TELL WHY
+        }
         else
             map->VCORE_FREQ[i] = -1.0;  
 

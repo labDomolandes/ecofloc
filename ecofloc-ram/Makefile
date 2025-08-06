@@ -4,7 +4,7 @@ LDFLAGS = -lpthread -lrt
 
 TARGET_RAM = ecofloc-ram.out
 SOURCE_RAM = main.c
-ADDITIONAL_SOURCES = pid_energy.c comm_energy.c results_map.c
+ADDITIONAL_SOURCES = pid_energy.c comm_energy.c system_energy.c results_map.c
 
 all: $(TARGET_RAM)
 

@@ -47,9 +47,10 @@ extern char* filePath;
 #pragma pack(push, 1) // for rpc issues: Align structure fields to 1-byte boundaries, disabling padding.
 typedef struct
 {
-    union { //for pid OR command name
-        int pid; 
+    union { //for pid OR command name OR System name
+        int pid;
         char comm_name[256];
+        char sys_name[256];
     } identifier;
 
     int is_pid;
@@ -74,9 +75,9 @@ int create_results_object(const char* name, int* fd, void** ptr);
 * Description: This initializes the results structure and calls create_results_object()
 *              Identifier: The pid or the command name is_pid: 1 if is pid 
 */
-void initialize_results_object(void *identifier, int is_pid);
+void initialize_results_object(void *identifier, int type);
 void write_results(int pid, int timestamp, double power,  double energy, int iterations, int interval_ms);
-void print_results(int is_pid);
+void print_results();
 void close_results_object();
 
 #endif // RESULTS_MAP_H

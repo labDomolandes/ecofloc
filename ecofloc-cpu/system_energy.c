@@ -213,7 +213,7 @@ double system_energy(int interval_ms, int timeout_s)
     */
 
 
-    //while (keep_running && (time(NULL) - start_time) <= timeout_s)
+    //while (stay_running && (time(NULL) - start_time) <= timeout_s)
     int iteration=1;
     while (stay_running && iteration <= total_iterations)
     {

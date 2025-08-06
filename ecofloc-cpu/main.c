@@ -116,11 +116,11 @@ int main(int argc, char **argv)
     // Case: -S -> System-wide analysis
     if (system_mode)
     {
-        char *sys = "System_wide";
+        char *sys = "System_Wide";
         init_cpu_features(&cpu_specs);
-        initialize_results_object(sys, 0); 
+        initialize_results_object(sys, 3); 
         system_energy((int)interval_ms, (int)total_time_s);
-        print_results(0);
+        print_results();
     }
 
     // Case: -l command -> Launch and analyze by PID
@@ -146,7 +146,7 @@ int main(int argc, char **argv)
             int pid_copy = child_pid;
             initialize_results_object(&pid_copy, 1);
             pid_energy(child_pid, (int)interval_ms, (int)total_time_s);
-            print_results(1);
+            print_results();
         }
         else
         {
@@ -175,9 +175,9 @@ int main(int argc, char **argv)
         else if (child_pid > 0)  
         {
             init_cpu_features(&features);
-            initialize_results_object(launchCommandName, 0);
+            initialize_results_object(launchCommandName, 2);
             comm_energy(launchCommandName, (int)interval_ms, (int)total_time_s);
-            print_results(0);
+            print_results();
         }
         else
         {
@@ -192,16 +192,16 @@ int main(int argc, char **argv)
         init_cpu_features(&features);
         initialize_results_object(&pid, 1);
         pid_energy(pid, (int)interval_ms, (int)total_time_s);
-        print_results(1);
+        print_results();
     }
 
     // Case: -n processName -> Analyze an existing process by name
     else if (processName != NULL)
     {
         init_cpu_features(&features);
-        initialize_results_object(processName, 0);
+        initialize_results_object(processName, 2);
         comm_energy(processName, (int)interval_ms, (int)total_time_s);
-        print_results(0);
+        print_results();
     }
 
     close_results_object();

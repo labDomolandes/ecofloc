@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -DDEFAULT_CONFIG_PATH=\"/opt/ecofloc/sdFeatures.conf\" -w
 LDFLAGS = -lpthread -lrt
-ADDITIONAL_LIBRARIES = pid_energy.c sd.c results_map.c comm_energy.c
+ADDITIONAL_LIBRARIES = pid_energy.c sd.c results_map.c comm_energy.c system_energy.c
 
 TARGET_SD = ecofloc-sd.out
 SOURCE_SD = main.c

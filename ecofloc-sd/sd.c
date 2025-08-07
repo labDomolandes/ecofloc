@@ -44,22 +44,24 @@ void init_sd_features(sd_features *features)
             ; // Successfully parsed write_max_rate
         else if (sscanf(line, "read_max_rate=%ld", &(features->read_max_rate)) == 1)
             ; // Successfully parsed read_max_rate
+        else if (sscanf(line, "device=%63s", features->device) == 1)
+            ; // Successfully parsed device name
     }
 
     fclose(file);
 }
 
-long read_bytes(int pid)
+long read_bytes_pid(int pid)
 {
-    return io_bytes(pid, "read_bytes:");
+    return io_bytes_pid(pid, "read_bytes:");
 }
 
-long written_bytes(int pid)
+long written_bytes_pid(int pid)
 {
-    return io_bytes(pid, "write_bytes:");
+    return io_bytes_pid(pid, "write_bytes:");
 }
 
-long io_bytes(int pid, const char* key)
+long io_bytes_pid(int pid, const char* key)
 {
     char path[256];
     snprintf(path, sizeof(path), PROC_IO_PATH, pid);
@@ -98,5 +100,50 @@ long io_bytes(int pid, const char* key)
 
 
 
+long read_bytes_sys(sd_features *features)
+{
+    return io_bytes_sys(features, 1);
+}
 
+long written_bytes_sys(sd_features *features)
+{
+    return io_bytes_sys(features, 0);
+}
 
+long io_bytes_sys(sd_features *features, int is_read)
+{
+    FILE *fp = popen("iostat -d -k", "r");  // -k for kB output
+    if (fp == NULL)
+    {
+        perror("Failed to run iostat");
+        return -1;
+    }
+
+    char line[256];
+    long kb_read = -1;
+    long kb_wrtn = -1;
+
+    while (fgets(line, sizeof(line), fp) != NULL)
+    {
+        if (strncmp(line, features->device, strlen(features->device)) == 0)
+        {
+            char dev[64];
+            float tps, kb_read_s, kb_wrtn_s, kb_dscd_s;
+            long dummy_dscd;
+
+            int matched = sscanf(line, "%63s %f %f %f %f %ld %ld %ld",
+                                 dev, &tps, &kb_read_s, &kb_wrtn_s, &kb_dscd_s,
+                                 &kb_read, &kb_wrtn, &dummy_dscd);
+
+            if (matched >= 7)
+            {
+                pclose(fp);
+                return (is_read ? kb_read : kb_wrtn) * 1024L;  // convert to bytes
+            }
+        }
+    }
+
+    pclose(fp);
+    fprintf(stderr, "Device '%s' not found or parsing failed.\n", features->device);
+    return -1;
+}

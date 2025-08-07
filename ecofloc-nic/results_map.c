@@ -24,6 +24,7 @@ int pid_fd = -1;
 int comm_fd = -1;
 void *pid_ptr = NULL;
 void *comm_ptr = NULL;
+void *sys_ptr = NULL;
 FILE *export_file = NULL;
 results *global_results = NULL; 
 
@@ -118,7 +119,8 @@ int create_results_object(const char* name, int* fd, void** ptr)
     return 0;
 }
 
-void initialize_results_object(void *identifier, int is_pid)
+
+void initialize_results_object(void *identifier, int type)
 {
 
     pthread_mutex_lock(&pid_mutex);
@@ -135,7 +137,7 @@ void initialize_results_object(void *identifier, int is_pid)
     * Any time we update global_results, we are directly updating the shared memory block
     */
     
-    if (is_pid) 
+    if (type==1) 
     {
         sprintf(SHARED_OBJ_NAME, "%s%s%d", SHARED_OBJ_NAME_ROOT, "PID_" , *((int*) identifier));
         create_results_object(SHARED_OBJ_NAME, &pid_fd, &pid_ptr);
@@ -146,7 +148,7 @@ void initialize_results_object(void *identifier, int is_pid)
         global_results->elapsed_time=0;
         global_results->count=0;
     } 
-    else 
+    else if (type==2)
     {
 
         sprintf(SHARED_OBJ_NAME, "%s%s%s", SHARED_OBJ_NAME_ROOT, "COMM_", (char*) identifier);
@@ -159,13 +161,23 @@ void initialize_results_object(void *identifier, int is_pid)
         global_results->elapsed_time=0;
         global_results->count=0;
     }
+    else if (type==3)
+    {
+
+        sprintf(SHARED_OBJ_NAME, "%s%s%s", SHARED_OBJ_NAME_ROOT, "SYS_", (char*) identifier);
+        create_results_object(SHARED_OBJ_NAME, &pid_fd, &sys_ptr);
+
+        global_results = (results*) sys_ptr;
+        strncpy(global_results->identifier.sys_name, (char*) identifier, 255);
+        global_results->identifier.sys_name[255] = '\0'; // Ensure null-termination
+        global_results->is_pid = 0;
+        global_results->elapsed_time=0;
+        global_results->count=0;
+    }
 
 
     pthread_mutex_unlock(&pid_mutex);
 }
-
-
-
 
 
 
@@ -218,33 +230,19 @@ void write_results(int pid, int timestamp, double power, double energy,int itera
 }
 
 
-
-void print_results(int is_pid)
+void print_results()
 {
     pthread_mutex_lock(&pid_mutex);
-    
-    results *data;
 
-    if (is_pid) data = (results*) pid_ptr;
-    else data = (results*) comm_ptr;
-
-    if (data != NULL)
+    if (global_results != NULL)
     {
-        if (data->is_pid)
-        {
-            printf("*****************************\n");
-            printf("%s\n", SHARED_OBJ_NAME);
-            printf("*****************************\n");
-        }
-        else
-        {
-            printf("*****************************\n");
-            printf("%s\n", SHARED_OBJ_NAME);
-            printf("*****************************\n");
-        }
+        
+        printf("*****************************\n");
+        printf("%s\n", SHARED_OBJ_NAME);
+        printf("*****************************\n");
 
-        printf("Average Power : %.2f Watts\n", data->average_power);
-        printf("Total Energy : %.2f Joules\n", data->total_energy);
+        printf("Average Power : %.2f Watts\n", global_results->average_power);
+        printf("Total Energy : %.2f Joules\n", global_results->total_energy);
 
         printf("*****************************\n");
 
@@ -257,6 +255,7 @@ void print_results(int is_pid)
     }
     pthread_mutex_unlock(&pid_mutex);
 }
+
 
 
 void close_results_object()

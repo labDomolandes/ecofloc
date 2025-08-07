@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Wall -lpthread -lrt -w
-ADDITIONAL_LIBRARIES = nic.c pid_energy.c comm_energy.c results_map.c
+ADDITIONAL_LIBRARIES = nic.c pid_energy.c comm_energy.c system_energy.c results_map.c
 
 TARGET_NIC=ecofloc-nic.out
 SOURCE_NIC=main.c

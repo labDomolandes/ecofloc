@@ -33,7 +33,9 @@ typedef struct {
     float read_power;
     long write_max_rate;
     long read_max_rate;
+    char device[64]; // Storage device name (e.g., "nvme0n1")
 } sd_features;
+
 
 void init_sd_features(sd_features *features);
 
@@ -44,8 +46,23 @@ void init_sd_features(sd_features *features);
  * Documentation: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/filesystems/proc.rst
  */
 
-long read_bytes(int pid);
-long written_bytes(int pid);
-long io_bytes(int pid, const char* key);
+long read_bytes_pid(int pid);
+long written_bytes_pid(int pid);
+long io_bytes_pid(int pid, const char* key);
+
+/*
+ * Description: These functions retrieve the number of bytes read or written 
+ * by a specific block device from system-wide I/O statistics, as reported by `iostat`.
+ * The values correspond to cumulative read and write amounts since boot,
+ * extracted from /proc/diskstats via iostat.
+ * This function can be used to measure byte counts at two different times 
+ * to assess global disk usage over a period.
+ * Documentation: https://docs.kernel.org/admin-guide/iostats.html
+ */
+
+long read_bytes_sys(sd_features *features);
+long written_bytes_sys(sd_features *features);
+long io_bytes_sys(sd_features *features, int is_read);
+
 
 #endif // SD_H

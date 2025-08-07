@@ -1,4 +1,4 @@
-/*
+ /*
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
 distributed with this work for additional information
@@ -18,63 +18,59 @@ under the License.
 */
 
 
-#include"pid_energy.h"
+#include "system_energy.h"
+#include "results_map.h"
 
 
+nic_features n_features;
 
-nic_features features;
 
-volatile sig_atomic_t keep_running = 1;
+volatile sig_atomic_t stay_running = 1;
 
-void handle_sigint(int sig)
+void handle_signal(int sig) 
 {
-    keep_running = 0;
+    stay_running = 0;
 }
 
-double pid_energy(int pid, int interval_ms, int timeout_s)
+double system_energy(int interval_ms, int timeout_s)
 {
     time_t start_time, current_time;
     double total_energy = 0.0;
     char command[512];
     char output[1024];
 
-    signal(SIGINT, handle_sigint);
+    signal(SIGINT, handle_signal);
 
     start_time = time(NULL);
 
 
 
-     //68 years :)
+    // 68 years :)
     if (timeout_s < 0) timeout_s = INT_MAX;
 
-    //All to milliseconds to get the iterations to perform
+    // All to milliseconds to get the iterations to perform
     int total_iterations = (int)(timeout_s * 1000.0 / interval_ms);
 
-    
     /*
     * PATCH: Instead of stopping the loop based on timeout expiration, EcoFloc now iterates 
     * based on the computed number of iterations. 
-    * This approach prevents inconsistencies when handling multiple PIDs. 
-    * Example: If processing all PIDs in an iteration takes longer than the specified interval, 
+    * This approach prevents inconsistencies when handling multiple measurements. 
+    * Example: If collecting system-wide stats takes longer than the specified interval, 
     * relying solely on elapsed time could cause an early exit before completing the intended cycles.
     */
 
-    //while (keep_running && (time(NULL) - start_time) <= timeout_s)
-    int iteration=1;
-    while (keep_running && iteration <= total_iterations)
+    int iteration = 1;
+    while (stay_running && iteration <= total_iterations)
     {
-        // Check if the process still exists
-        if (kill(pid, 0) == -1)
-        {
-            printf("Process %d does not exist or was killed\n", pid);
-            break;
-        }
+        /*
+         * Construct and run the command to gather total system network usage.
+         * We use nethogs in default mode to report per-process usage, then we sum it up.
+         * This provides a rough estimate of total upload and download rates across the system.
+         */
+        sprintf(command, "timeout %d nethogs %s -t -v 0 -d 1 | awk 'NF>=2 {print $(NF-1), $NF}'",
+            interval_ms / 1000, n_features.iface);
 
-        // Construct and run the command to gather network usage
-        sprintf(command, "timeout %d nethogs %s -t -P %d -v 0 -d 1 | awk '/%d/ {print $(NF-1), $NF}'", 
-        interval_ms / 1000, features.iface, pid, pid);
 
-        //printf("command->%s\n",command);
         FILE *fp = popen(command, "r");
         if (fp == NULL)
         {
@@ -84,43 +80,40 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
 
         while (fgets(output, sizeof(output) - 1, fp) != NULL)
         {
-            //printf("output->%s\n",output);
             double upload_rate, download_rate;
             if (sscanf(output, "%lf %lf", &upload_rate, &download_rate) != 2)
             {
-                //Enable to debug;
-                //fprintf(stderr, "Failed to parse  the nethogs output: %s", output);
                 continue;
             }
 
+            // printf("ITERATION->%d\n",iteration);
             // printf("upload->%f\n",upload_rate);
             // printf("download->%f\n",download_rate);
 
-            double upload_power = features.upload_power * (upload_rate / features.upload_max_rate);
-            double download_power = features.download_power * (download_rate / features.download_max_rate);
-            
-            // printf("DL POWER->%f\n",features.download_power);
-            // printf("UP POWER->%f\n",features.upload_power);
-            // printf("upload RATE MAX->%ld\n",features.upload_max_rate);
-            // printf("download RATE MAX->%ld\n",features.download_max_rate);
-            
+            double upload_power = n_features.upload_power * (upload_rate / n_features.upload_max_rate);
+            double download_power = n_features.download_power * (download_rate / n_features.download_max_rate);
+
+            //  printf("DL POWER->%f\n",n_features.download_power);
+            // printf("UP POWER->%f\n",n_features.upload_power);
+            // printf("upload RATE MAX->%ld\n",n_features.upload_max_rate);
+            // printf("download RATE MAX->%ld\n",n_features.download_max_rate);
+
+
+
             double avg_interval_power = upload_power + download_power;
 
-            // Calculate interval power and energy
             double interval_seconds = (double) interval_ms / 1000.0;
             double interval_energy = avg_interval_power * interval_seconds; // Energy in joules for the interval
 
-            write_results(pid, time(NULL) - start_time, avg_interval_power,interval_energy, iteration, interval_ms);
+            write_results(-1, time(NULL) - start_time, avg_interval_power, interval_energy, iteration, interval_ms);
 
-            total_energy += interval_energy; // Total energy in joules
+            total_energy += interval_energy;
         }
 
         pclose(fp);
-
         current_time = time(NULL);
-
         iteration++;
-
     }
+
     return total_energy; // Return total energy in joules
 }

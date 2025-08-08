@@ -26,11 +26,11 @@ under the License.
 #include "results_map.h"
 #include "pid_energy.h"
 #include "comm_energy.h"
+#include "system_energy.h"
 
 int export_to_csv = 0; //Extern variable in results_map.h
 int dynamic_mode = 0; //Extern in comm_energy.h
 char* filePath = NULL; // Extern variable in results_map.h
-
 
 
 int main(int argc, char **argv)
@@ -42,10 +42,10 @@ int main(int argc, char **argv)
     double interval_ms = 0.0;
     double total_time_s = 0.0;
     int verbose = 0;
-    export_to_csv = 0;
+    int system_mode = 0;
 
     int opt;
-    while ((opt = getopt(argc, argv, "p:n:i:t:f:l:L:dv")) != -1)
+    while ((opt = getopt(argc, argv, "p:n:i:t:f:l:L:Sdv")) != -1)
     {
         switch (opt)
         {
@@ -81,6 +81,9 @@ int main(int argc, char **argv)
             case 'L':
                 launchCommandName = optarg; 
                 break;
+            case 'S':
+                system_mode = 1;  
+                break;
             case 'd':
                 dynamic_mode = 1;  
                 break;
@@ -88,29 +91,36 @@ int main(int argc, char **argv)
                 verbose = 1;  
                 break;
             default:
-                fprintf(stderr, "Usage: %s [-p PID] [-n ProcessName] [-l Command] [-L Command] -i INTERVAL_MS -t TOTAL_TIME_S [-f] [-d] [-v]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-p PID] [-n ProcessName] [-l Command] [-L Command] -i INTERVAL_MS -t TOTAL_TIME_S [-S] [-f] [-d] [-v]\n", argv[0]);
                 exit(EXIT_FAILURE);
         }
     }
 
-    // Only one option allowed
-    int tracking_options = (pid != 0) + (processName != NULL) + (launchCommandPID != NULL) + (launchCommandName != NULL);
+    int tracking_options = (pid != 0) + (processName != NULL) + (launchCommandPID != NULL) + (launchCommandName != NULL) + (system_mode != 0);
 
     if (tracking_options != 1)
     {
-        fprintf(stderr, "Error: You must specify exactly one of -p, -n, -l, or -L\n");
+        fprintf(stderr, "Error: You must specify exactly one of -p, -n, -l, -L, or -S\n");
         exit(EXIT_FAILURE);
     }
 
-    // Only -l OR -L can be used 
     if (launchCommandPID != NULL && launchCommandName != NULL)
     {
         fprintf(stderr, "Error: -l and -L cannot be used together.\n");
         exit(EXIT_FAILURE);
     }
 
+    // Case: -S -> System-wide analysis
+    if (system_mode)
+    {
+        char *sys = "System_Wide";
+        initialize_results_object(sys, 3);
+        system_energy((int)interval_ms, (int)total_time_s);
+        print_results();
+    }
+
     // Case: -l command -> Launch and analyze by PID
-    if (launchCommandPID != NULL)
+    else if (launchCommandPID != NULL)
     {
         //  Duplicate the process
         pid_t child_pid = fork();
@@ -133,11 +143,12 @@ int main(int argc, char **argv)
         // If I am the parent process, I analyze the energy consumption. 
         else if (child_pid > 0)  
         {
+            //sleep(1);
             int pid_copy = child_pid;  // Ensure proper pointer passing
             initialize_results_object(&pid_copy, 1);
 
             pid_energy(child_pid, (int)interval_ms, (int)total_time_s);
-            print_results(1);
+            print_results();
         }
         else
         {
@@ -165,9 +176,10 @@ int main(int argc, char **argv)
         }
         else if (child_pid > 0)  
         {
-            initialize_results_object(launchCommandName, 0);
+            //sleep(1);
+            initialize_results_object(launchCommandName, 2);
             comm_energy(launchCommandName, (int)interval_ms, (int)total_time_s);
-            print_results(0);
+            print_results();
         }
         else
         {
@@ -181,17 +193,17 @@ int main(int argc, char **argv)
     {
         initialize_results_object(&pid, 1);
         pid_energy(pid, (int)interval_ms, (int)total_time_s);
-        print_results(1);
+        print_results();
     }
 
     // Case: -n processName -> Analyze an existing process by name
     else if (processName != NULL)
     {
-        initialize_results_object(processName, 0);
+        initialize_results_object(processName, 2);
         comm_energy(processName, (int)interval_ms, (int)total_time_s);
-        print_results(0);
+        print_results();
     }
-    
+
     close_results_object();
 
     if (filePath) {

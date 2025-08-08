@@ -17,25 +17,22 @@
  * under the License.
  */
 
+
 #ifndef SYSTEM_ENERGY_H
 #define SYSTEM_ENERGY_H
 
-#include <signal.h>
-#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>   // For nanosleep
 #include <limits.h>
+#include <signal.h>
+#include "gpu.h"
 
 
-#include "sd.h"
-#include "results_map.h"
+extern volatile sig_atomic_t stay_running; // for the CNTRL + C
 
-extern sd_features disk_features;
-
-/*
- * Variable and function for exiting the while when CNTRL+C is pressed 
-*/
-extern volatile sig_atomic_t stay_running;  
 void handle_signal(int sig);
-
 
 double system_energy(int interval_ms, int timeout_s);
 

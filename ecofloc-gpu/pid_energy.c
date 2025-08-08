@@ -74,6 +74,7 @@ void handle_sigint(int sig)
 {
     keep_running = 0;
 }
+
 double pid_energy(int pid, int interval_ms, int timeout_s)
 {
     double total_energy = 0.0;
@@ -88,11 +89,12 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
 
     signal(SIGINT, handle_sigint);
 
-    //All to milliseconds to get the iterations to perform
-    int total_iterations = (int)(timeout_s * 1000.0 / interval_ms);
 
     //68 years :)
     if (timeout_s < 0) timeout_s = INT_MAX;
+
+    //All to milliseconds to get the iterations to perform
+    int total_iterations = (int)(timeout_s * 1000.0 / interval_ms);
 
     /*
     * PATCH: Instead of stopping the loop based on timeout expiration, EcoFloc now iterates 

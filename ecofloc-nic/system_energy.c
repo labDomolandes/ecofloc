@@ -105,7 +105,9 @@ double system_energy(int interval_ms, int timeout_s)
             double interval_seconds = (double) interval_ms / 1000.0;
             double interval_energy = avg_interval_power * interval_seconds; // Energy in joules for the interval
 
-            write_results(-1, time(NULL) - start_time, avg_interval_power, interval_energy, iteration, interval_ms);
+            //We fixed "-333" as the system identifier in the results file.
+            int pid_for_system=-333;
+            write_results(pid_for_system, time(NULL) - start_time, avg_interval_power, interval_energy, iteration, interval_ms);
 
             total_energy += interval_energy;
         }

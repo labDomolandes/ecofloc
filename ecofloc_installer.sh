@@ -282,7 +282,7 @@ check_ram()
     local perf_timeout=3000
 
     if ! command -v perf &> /dev/null; then
-        print_status "RAM -> Checking if perf is installed. Please, install perf package" 0
+	print_status $'RAM -> perf failed.\nInstall: linux-tools-$(uname -r) linux-cloud-tools-$(uname -r) (or *-generic).\nHWE bug (LP#2117159): perf may be missing; workaround:\n  sudo ln -s /usr/lib/linux-tools/<prev>/perf /usr/lib/linux-tools/$(uname -r)/perf' 0
         return 1
     else
         print_status "RAM -> Checking if perf is installed" 1

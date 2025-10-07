@@ -46,6 +46,28 @@ void handle_sigint(int sig)
 
 double pid_energy(int pid, int interval_ms, int timeout_s)
 {
+
+    /*
+     *PATCH: Because of the perf tool missing in the kernel-tools package, let't verify if that exists first
+     * */
+    if (system("command -v perf >/dev/null 2>&1 || [ -x \"/usr/lib/linux-tools/$(uname -r)/perf\" ]") != 0)
+    {
+    	fprintf(stderr,
+        "perf(1) not found.\n"
+        "Install for your running kernel:\n"
+        "  linux-tools-`uname -r`\n"
+        "  linux-cloud-tools-`uname -r`\n"
+        "Optionally:\n"
+        "  linux-tools-generic\n"
+        "  linux-cloud-tools-generic\n"
+        "Heads-up (LP#2117159): perf may be missing in HWE builds:\n"
+        "  https://bugs.launchpad.net/ubuntu/+source/linux-hwe-6.14/+bug/2117159\n"
+        "Workaround: symlink previous perf if ABI-compatible:\n"
+        "  sudo ln -s /usr/lib/linux-tools/<prev>/perf /usr/lib/linux-tools/`uname -r`/perf\n"
+    );
+    exit(1);
+    }
+
     time_t start_time = time(NULL);
     char command[512];
     char output[1024];
@@ -78,12 +100,13 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
         sprintf(command, "perf stat -e mem-stores,mem-loads -p %d --timeout=%d 2>&1", pid, interval_ms);
 
         // Trigger perf
-        FILE *fp = popen(command, "r");
-        if (fp == NULL)
-        {
-            perror("Failed to run command");
-            exit(1);
-        }
+
+	FILE *fp = popen(command, "r");
+	if (fp == NULL)
+	{
+	    perror("popen failed");
+	    exit(1);
+	}
 
         // Variables to hold parsed values
         double mem_stores = 0, mem_loads = 0;

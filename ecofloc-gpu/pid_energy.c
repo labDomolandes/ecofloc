@@ -45,16 +45,18 @@ int gpu_usage(int pid)
         char sm_usage_str[10];  
         char type[10];          
 
+	/*
+	 * NVIDIA-SMI MAN: https://developer.download.nvidia.com/compute/DCGM/docs/nvidia-smi-367.38.pdf
+	 * */
         /*
         * # gpu         pid  type    sm    mem    enc    dec    command
         * # Idx           #   C/G     %      %      %      %    name
         *    0       2147     G      7      1      -      -    Xorg           
         */
-
         if (sscanf(line, "%d %d %s %s", &gpu_index, &current_pid, type, sm_usage_str) == 4)
         
         {
-            if (current_pid == pid && strcmp(type, "G") == 0) // G -> GPU
+            if (current_pid == pid) 
             {
                 if (strcmp(sm_usage_str, "-") != 0)  // IF NOT "-"
                     usage = atoi(sm_usage_str);  // Convert valid usage string to int
